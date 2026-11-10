@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Instalar app</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0;
+               display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { max-width: 420px; padding: 2rem; text-align: center; }
+        h1 { font-size: 1.25rem; }
+        p { color: #94a3b8; font-size: .9rem; line-height: 1.6; }
+        .ios { background: #1e293b; border-radius: .75rem; padding: 1rem; margin-top: 1rem; font-size: .85rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div style="font-size: 3rem">🎫</div>
+        <h1>Instalar Nexo en tu celular</h1>
+        <p>
+            Esta app funciona <strong>sin internet</strong>: los check-ins, fotos y comentarios
+            se guardan en el dispositivo y se sincronizan solos cuando vuelva la señal.
+        </p>
+        <div class="ios">
+            <strong>iPhone (Safari):</strong> botón Compartir → «Agregar a pantalla de inicio».<br>
+            <strong>Android (Chrome):</strong> menú ⋮ → «Instalar app».
+        </div>
+        <p style="margin-top:1.5rem">
+            <a href="/dashboard" style="color:#38bdf8">Ir al sistema →</a>
+        </p>
+    </div>
+    <script>
+        // registra el service worker de la PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .catch((e) => console.warn('SW no registrado', e));
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('ticket_asignaciones', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('ticket_id')->constrained('tickets')->cascadeOnDelete();
+            // mantenimiento: hasta 2 tecnicos | limpieza: 1 por sitio
+            $table->foreignId('tecnico_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('asignado_por')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->unique(['ticket_id', 'tecnico_id']);
+            $table->index('tecnico_id');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('ticket_asignaciones');
+    }
+};
