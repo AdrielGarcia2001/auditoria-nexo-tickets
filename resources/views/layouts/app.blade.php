@@ -25,8 +25,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
-                    <a href="{{ route('dashboard') }}" class="font-semibold tracking-tight">
-                        🎫 Nexo <span class="hidden sm:inline text-slate-400 font-normal">· Auditoría de Tickets</span>
+                    <a href="{{ route('landing') }}" class="flex items-center gap-2 font-semibold tracking-tight" title="SIGO-NEXO">
+                        <img src="/images/sigo-nexo-mark.svg" alt="SIGO-NEXO" class="h-7 w-7">
+                        <span>SIGO<span class="text-blue-400">-NEXO</span></span>
+                        <span class="hidden text-slate-400 font-normal md:inline">· Auditoría de Tickets</span>
                     </a>
                 </div>
 

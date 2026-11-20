@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['ticket_id', 'user_id', 'tipo', 'ruta', 'drive_url', 'lat', 'lng', 'tomada_at'])]
+#[Fillable(['ticket_id', 'user_id', 'tipo', 'ruta', 'drive_url', 'lat', 'lng', 'direccion', 'tomada_at'])]
 class TicketFoto extends Model
 {
     protected $table = 'ticket_fotos';
@@ -14,6 +14,7 @@ class TicketFoto extends Model
     protected $casts = [
         'lat' => 'float',
         'lng' => 'float',
+        'direccion' => 'string',
         'tomada_at' => 'datetime',
     ];
 

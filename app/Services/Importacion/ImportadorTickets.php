@@ -212,6 +212,82 @@ class ImportadorTickets
         return ['importados' => $importados, 'fallidos' => $fallidos];
     }
 
+    /**
+     * Compara una fila del Excel con un ticket existente.
+     * Devuelve true si son equivalentes (no hay cambios que aplicar).
+     */
+    public function esIgual(Ticket $ticket, array $fila): bool
+    {
+        foreach ($this->camposComparables($fila) as $campo => $valor) {
+            if ($this->valorComparable($ticket->{$campo}) !== $this->valorComparable($valor)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Aplica los cambios de una fila modificada a un ticket existente.
+     * Devuelve true si se aplicó al menos un cambio.
+     */
+    public function aplicarCambios(Ticket $ticket, array $fila, User $usuario, string $hoja): bool
+    {
+        $cambios = [];
+        $antes = [];
+
+        foreach ($this->camposComparables($fila) as $campo => $valor) {
+            if ($this->valorComparable($ticket->{$campo}) !== $this->valorComparable($valor)) {
+                $antes[$campo] = $ticket->{$campo};
+                $cambios[$campo] = $valor;
+            }
+        }
+
+        if (empty($cambios)) {
+            return false;
+        }
+
+        $ticket->fill($cambios);
+        $ticket->save(); // el evento saving recalcula el SLA
+
+        TicketHistorial::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => $usuario->id,
+            'accion' => 'actualizado_desde_excel',
+            'detalles' => [
+                'hoja' => $hoja,
+                'fila' => $fila['_fila'] ?? null,
+                'antes' => $antes,
+                'despues' => $cambios,
+            ],
+        ]);
+
+        return true;
+    }
+
+    /** Campos del Excel que se pueden comparar/actualizar (excluye internos). */
+    private function camposComparables(array $fila): array
+    {
+        unset($fila['_fila'], $fila['_hoja'], $fila['_duplicado'], $fila['provincia']);
+
+        $fillable = array_flip((new Ticket())->getFillable());
+
+        return array_intersect_key($fila, $fillable);
+    }
+
+    /** Normaliza valores para comparar (fechas Carbon vs string Y-m-d). */
+    private function valorComparable(mixed $valor): ?string
+    {
+        if ($valor === null || $valor === '') {
+            return null;
+        }
+        if ($valor instanceof \DateTimeInterface) {
+            return $valor->format('Y-m-d');
+        }
+
+        return (string) $valor;
+    }
+
     private function insertarFila(array $fila, User $usuario, string $hoja, int &$importados): void
     {
         $datos = $fila;

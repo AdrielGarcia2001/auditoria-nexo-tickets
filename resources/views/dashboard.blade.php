@@ -5,7 +5,15 @@
 @section('content')
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-900">Hola, {{ auth()->user()->name }} 👋</h1>
-        <p class="text-sm text-slate-500">Estado general del sistema de auditoría.</p>
+        <p class="text-sm text-slate-500">
+            @if ($usuario->isAdmin())
+                Información general del sistema de auditoría.
+            @elseif ($usuario->isSupervisor())
+                Datos de tus zonas y técnicos asignados.
+            @else
+                Tus tickets asignados.
+            @endif
+        </p>
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -54,12 +62,33 @@
         </a>
     </div>
 
-    <div class="mt-6 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <h2 class="font-semibold text-slate-900">Próximos pasos</h2>
-        <ul class="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
-            <li>Importá el Excel de tickets (hojas de Formosa 2023).</li>
-            <li>Asigná técnicos a cada ticket.</li>
-            <li>Seguí el recorrido de la cuadrilla en el mapa en vivo.</li>
-        </ul>
-    </div>
+    {{-- INFO CON DATOS: solo administrador --}}
+    @if ($infoAdmin)
+        <div class="mt-6 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <h2 class="font-semibold text-slate-900">📊 Resumen del sistema</h2>
+            <p class="text-xs text-slate-500">Datos generales de la operación.</p>
+            <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                <div class="rounded-lg bg-slate-50 p-3 text-center ring-1 ring-slate-100">
+                    <div class="text-2xl font-bold text-slate-900">{{ $infoAdmin['total_usuarios'] }}</div>
+                    <div class="text-xs text-slate-500">Usuarios</div>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 text-center ring-1 ring-slate-100">
+                    <div class="text-2xl font-bold text-slate-900">{{ $infoAdmin['total_supervisores'] }}</div>
+                    <div class="text-xs text-slate-500">Supervisores</div>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 text-center ring-1 ring-slate-100">
+                    <div class="text-2xl font-bold text-slate-900">{{ $infoAdmin['total_tecnicos'] }}</div>
+                    <div class="text-xs text-slate-500">Técnicos</div>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 text-center ring-1 ring-slate-100">
+                    <div class="text-2xl font-bold text-slate-900">{{ $infoAdmin['total_zonas'] }}</div>
+                    <div class="text-xs text-slate-500">Zonas activas</div>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 text-center ring-1 ring-slate-100">
+                    <div class="text-2xl font-bold text-slate-900">{{ $infoAdmin['total_sitios'] }}</div>
+                    <div class="text-xs text-slate-500">Sitios</div>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection

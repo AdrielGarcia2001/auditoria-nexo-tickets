@@ -3,8 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Sitio;
+use App\Models\SupervisorTecnico;
+use App\Models\SupervisorZona;
 use App\Models\TecnicoSitio;
 use App\Models\User;
+use App\Models\Zona;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -19,6 +22,7 @@ class DatabaseSeeder extends Seeder
                 'password' => 'password',
                 'role' => User::ROLE_ADMIN,
                 'activo' => true,
+                'password_cambiado' => true,
             ]
         );
 
@@ -29,6 +33,7 @@ class DatabaseSeeder extends Seeder
                 'password' => 'password',
                 'role' => User::ROLE_SUPERVISOR,
                 'activo' => true,
+                'password_cambiado' => true,
             ]
         );
 
@@ -40,6 +45,7 @@ class DatabaseSeeder extends Seeder
                 'role' => User::ROLE_TECNICO,
                 'area' => User::AREA_MANTENIMIENTO,
                 'activo' => true,
+                'password_cambiado' => true,
             ]
         );
 
@@ -51,6 +57,7 @@ class DatabaseSeeder extends Seeder
                 'role' => User::ROLE_TECNICO,
                 'area' => User::AREA_MANTENIMIENTO,
                 'activo' => true,
+                'password_cambiado' => true,
             ]
         );
 
@@ -62,6 +69,7 @@ class DatabaseSeeder extends Seeder
                 'role' => User::ROLE_TECNICO,
                 'area' => User::AREA_LIMPIEZA,
                 'activo' => true,
+                'password_cambiado' => true,
             ]
         );
 
@@ -73,6 +81,7 @@ class DatabaseSeeder extends Seeder
                 'role' => User::ROLE_TECNICO,
                 'area' => User::AREA_LIMPIEZA,
                 'activo' => true,
+                'password_cambiado' => true,
             ]
         );
 
@@ -106,5 +115,53 @@ class DatabaseSeeder extends Seeder
             ['sitio_id' => $incone->id, 'tecnico_id' => $mant2->id],
             ['asignado_por' => $supervisor->id]
         );
+
+        // ====== supervisor <-> tecnicos (cada supervisor tiene sus propios tecnicos) ======
+        // Cecilia Roldan (supervisor) tiene a todos los tecnicos bajo su supervision
+        foreach ([$mant1, $mant2, $limp1, $limp2] as $tecnico) {
+            SupervisorTecnico::updateOrCreate(
+                ['supervisor_id' => $supervisor->id, 'tecnico_id' => $tecnico->id],
+                ['asignado_en' => now()]
+            );
+        }
+
+        // ====== zonas delimitadas ======
+        $zonaNorte = Zona::updateOrCreate(
+            ['codigo' => 'ZN'],
+            [
+                'nombre' => 'Zona Norte',
+                'descripcion' => 'Cuadrillas de la zona norte de Formosa',
+                'activo' => true,
+            ]
+        );
+        $zonaCentro = Zona::updateOrCreate(
+            ['codigo' => 'ZC'],
+            [
+                'nombre' => 'Zona Centro',
+                'descripcion' => 'Cuadrillas del centro de Formosa',
+                'activo' => true,
+            ]
+        );
+        $zonaSur = Zona::updateOrCreate(
+            ['codigo' => 'ZS'],
+            [
+                'nombre' => 'Zona Sur',
+                'descripcion' => 'Cuadrillas de la zona sur de Formosa',
+                'activo' => true,
+            ]
+        );
+
+        // asignar zonas a sitios de ejemplo
+        $incone->update(['zona_id' => $zonaNorte->id]);
+        $evaPeron->update(['zona_id' => $zonaCentro->id]);
+
+        // ====== supervisor <-> zonas (cada supervisor gestiona ciertas zonas) ======
+        // Cecilia Roldan gestiona Zona Norte y Zona Centro
+        foreach ([$zonaNorte, $zonaCentro] as $zona) {
+            SupervisorZona::updateOrCreate(
+                ['supervisor_id' => $supervisor->id, 'zona_id' => $zona->id],
+                ['asignado_en' => now()]
+            );
+        }
     }
 }

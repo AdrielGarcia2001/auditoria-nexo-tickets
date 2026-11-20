@@ -6,14 +6,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'role', 'area', 'telefono', 'activo',
-    'solicitud_estado', 'solicitud_at', 'aprobado_at', 'aprobado_por',
-    'google_refresh_token'])]
+    'password_cambiado', 'google_refresh_token'])]
 #[Hidden(['password', 'remember_token', 'google_refresh_token'])]
 class User extends Authenticatable
 {
@@ -27,11 +25,6 @@ class User extends Authenticatable
     public const AREA_MANTENIMIENTO = 'mantenimiento';
     public const AREA_LIMPIEZA = 'limpieza';
 
-    // ====== estados de la solicitud de registro ======
-    public const SOLICITUD_PENDIENTE = 'pendiente';
-    public const SOLICITUD_ACEPTADO = 'aceptado';
-    public const SOLICITUD_RECHAZADO = 'rechazado';
-
     protected function casts(): array
     {
         return [
@@ -39,27 +32,19 @@ class User extends Authenticatable
             'password' => 'hashed',
             'activo' => 'boolean',
             'ultimo_seen_at' => 'datetime',
-            'solicitud_at' => 'datetime',
-            'aprobado_at' => 'datetime',
         ];
     }
 
-    // ====== solicitud de registro (aprobacion del admin) ======
-
-    public function solicitudPendiente(): bool
-    {
-        return $this->solicitud_estado === self::SOLICITUD_PENDIENTE;
-    }
-
-    public function solicitudRechazada(): bool
-    {
-        return $this->solicitud_estado === self::SOLICITUD_RECHAZADO;
-    }
-
-    /** El usuario puede entrar: solicitud aceptada y cuenta activa. */
+    /** El usuario puede entrar: cuenta activa. */
     public function puedeEntrar(): bool
     {
-        return $this->solicitud_estado === self::SOLICITUD_ACEPTADO && $this->activo;
+        return $this->activo;
+    }
+
+    /** Si es true, al loguearse debe cambiar la contraseña obligatoriamente. */
+    public function necesitaCambiarPassword(): bool
+    {
+        return ! $this->password_cambiado;
     }
 
     /** Texto amigable del perfil (rol + area). */
@@ -103,12 +88,6 @@ class User extends Authenticatable
 
     // ====== relaciones ======
 
-    /** Administrador que acepto la solicitud de registro. */
-    public function aprobador(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'aprobado_por');
-    }
-
     public function asignaciones(): HasMany
     {
         return $this->hasMany(TicketAsignacion::class, 'tecnico_id');
@@ -134,5 +113,90 @@ class User extends Authenticatable
     public function registrosGps(): HasMany
     {
         return $this->hasMany(RegistroGps::class);
+    }
+
+    // ====== supervisor <-> tecnicos ======
+
+    /** Relación directa con la tabla supervisor_tecnicos (solo si es supervisor). */
+    public function tecnicosAsignados(): HasMany
+    {
+        return $this->hasMany(SupervisorTecnico::class, 'supervisor_id');
+    }
+
+    /** IDs de los técnicos bajo este supervisor. */
+    public function tecnicoIds(): array
+    {
+        if (! $this->isSupervisor()) {
+            return [];
+        }
+
+        return $this->tecnicosAsignados()
+            ->pluck('tecnico_id')
+            ->all();
+    }
+
+    /** Técnicos activos bajo este supervisor. */
+    public function tecnicos(): HasMany
+    {
+        return $this->hasMany(User::class)
+            ->whereIn('id', $this->tecnicoIds())
+            ->where('role', self::ROLE_TECNICO)
+            ->where('activo', true)
+            ->orderBy('name');
+    }
+
+    /** Verifica si un técnico pertenece a este supervisor. */
+    public function tieneTecnico(User $tecnico): bool
+    {
+        if (! $this->isSupervisor()) {
+            return false;
+        }
+
+        return SupervisorTecnico::query()
+            ->where('supervisor_id', $this->id)
+            ->where('tecnico_id', $tecnico->id)
+            ->exists();
+    }
+
+    // ====== supervisor <-> zonas ======
+
+    /** Relación directa con la tabla supervisor_zonas (solo si es supervisor). */
+    public function zonasAsignadas(): HasMany
+    {
+        return $this->hasMany(SupervisorZona::class, 'supervisor_id');
+    }
+
+    /** IDs de las zonas asignadas a este supervisor. */
+    public function zonaIds(): array
+    {
+        if (! $this->isSupervisor()) {
+            return [];
+        }
+
+        return $this->zonasAsignadas()
+            ->pluck('zona_id')
+            ->all();
+    }
+
+    /** Zonas activas asignadas a este supervisor. */
+    public function zonas(): HasMany
+    {
+        return $this->hasMany(Zona::class)
+            ->whereIn('id', $this->zonaIds())
+            ->where('activo', true)
+            ->orderBy('nombre');
+    }
+
+    /** Verifica si este supervisor gestiona una zona. */
+    public function tieneZona(Zona $zona): bool
+    {
+        if (! $this->isSupervisor()) {
+            return false;
+        }
+
+        return SupervisorZona::query()
+            ->where('supervisor_id', $this->id)
+            ->where('zona_id', $zona->id)
+            ->exists();
     }
 }

@@ -7,8 +7,9 @@
         <h2 class="font-semibold text-slate-900">1. Subí el Excel</h2>
         <p class="mt-1 text-sm text-slate-500">
             Formato <code class="rounded bg-slate-100 px-1">.xlsx</code> (o el export de Google Sheets).
-            Cada fila se inserta como <strong>ticket nuevo</strong>: nunca se actualizan los existentes,
-            porque el N° de orden se repite en distintos sitios.
+            El mismo archivo <strong>no se puede subir dos veces</strong>. Los tickets nuevos se insertan;
+            si un ticket ya existe y el archivo trae <strong>cambios</strong>, se actualizan solo esos campos
+            (el N° de orden se repite en distintos sitios, por eso se compara también con ubicación y fecha).
         </p>
 
         <div class="mt-4">
@@ -20,6 +21,11 @@
             @error('archivo')
                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
             @enderror
+            @if ($hashArchivo && ! $errors->has('archivo'))
+                <p class="mt-2 text-xs text-slate-400">
+                    🔑 Archivo listo (hash calculado, se evitarán re-subidas)
+                </p>
+            @endif
         </div>
     </div>
 
@@ -59,16 +65,24 @@
                     <h2 class="font-semibold text-slate-900">3. Revisá los datos</h2>
                     <p class="text-sm text-slate-500">
                         Hoja <strong>{{ $hojaSeleccionada }}</strong> ·
-                        {{ number_format($totalFilas, 0, ',', '.') }} tickets para importar
+                        {{ number_format($totalFilas, 0, ',', '.') }} filas en el Excel
                         @if ($ignoradas) · {{ $ignoradas }} fila(s) vacías o sin N° de orden ignoradas @endif
-                        @if ($duplicados) · <span class="text-amber-600">{{ $duplicados }} posible(s) repetido(s) (se importan igual como nuevo)</span> @endif
+                        @if ($nuevos) · <span class="text-emerald-600">{{ $nuevos }} nuevo(s)</span> @endif
+                        @if ($modificados) · <span class="text-amber-600">{{ $modificados }} con cambios (se actualizarán)</span> @endif
+                        @if ($sinCambios) · <span class="text-slate-400">{{ $sinCambios }} sin cambios (se omiten)</span> @endif
                     </p>
                 </div>
 
                 <div class="flex items-center gap-2">
                     @if ($resultado)
                         <span class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 ring-1 ring-emerald-200">
-                            ✅ {{ number_format($resultado['importados'], 0, ',', '.') }} tickets importados
+                            ✅ {{ number_format($resultado['importados'], 0, ',', '.') }} nuevos
+                            @if (! empty($resultado['modificados']))
+                                · ✏️ {{ $resultado['modificados'] }} actualizados
+                            @endif
+                            @if (! empty($resultado['sin_cambios']))
+                                · {{ $resultado['sin_cambios'] }} sin cambios
+                            @endif
                             @if (count($resultado['fallidos']))
                                 · ❌ {{ count($resultado['fallidos']) }} fallidos
                             @endif

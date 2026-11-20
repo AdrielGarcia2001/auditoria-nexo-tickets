@@ -122,6 +122,11 @@ class Ticket extends Model
         return $this->hasMany(TicketFoto::class);
     }
 
+    public function consumibles(): HasMany
+    {
+        return $this->hasMany(ConsumibleTicket::class);
+    }
+
     public function historial(): HasMany
     {
         return $this->hasMany(TicketHistorial::class)->orderByDesc('created_at');
@@ -196,10 +201,10 @@ class Ticket extends Model
         return self::PRIORIDAD_HORAS[trim($prioridad)] ?? null;
     }
 
-    /** Recalcula sla_vencimiento = fecha_entrada + horas de la prioridad. */
+    /** Recalcula sla_vencimiento = fecha_entrada + horas del contrato del sitio (o default). */
     public function calcularSlaVencimiento(): void
     {
-        $horas = self::horasParaPrioridad($this->prioridad);
+        $horas = $this->horasSlaParaTicket();
 
         if (! $this->fecha_entrada || $horas === null) {
             $this->sla_vencimiento = null;
@@ -208,6 +213,26 @@ class Ticket extends Model
         }
 
         $this->sla_vencimiento = $this->fecha_entrada->copy()->addHours($horas)->endOfDay();
+    }
+
+    /**
+     * Horas de SLA efectivas para este ticket:
+     * 1) contrato activo del sitio (si aplica), 2) default del sistema.
+     */
+    public function horasSlaParaTicket(): ?int
+    {
+        if ($this->sitio_id) {
+            $contrato = \App\Models\ContratoSla::where('sitio_id', $this->sitio_id)
+                ->where('activo', true)
+                ->first();
+
+            // si hay contrato activo, manda lo que diga (null = prioridad sin SLA)
+            if ($contrato) {
+                return $contrato->horasPara($this->prioridad);
+            }
+        }
+
+        return self::horasParaPrioridad($this->prioridad);
     }
 
     public function slaVencido(): bool
@@ -237,6 +262,25 @@ class Ticket extends Model
     public function scopeDelTecnico(Builder $q, User $user): Builder
     {
         return $q->whereHas('tecnicos', fn ($t) => $t->whereKey($user->id));
+    }
+
+    /**
+     * Filtra tickets según el rol del usuario (única fuente de verdad).
+     * - Admin: ve todos.
+     * - Supervisor: solo tickets de sus zonas.
+     * - Técnico: solo sus tickets asignados.
+     */
+    public function scopePorRol(Builder $q, User $user): Builder
+    {
+        if ($user->isTecnico()) {
+            $q->delTecnico($user);
+        }
+
+        if ($user->isSupervisor()) {
+            $q->whereHas('sitio.zona', fn ($z) => $z->whereIn('id', $user->zonaIds()));
+        }
+
+        return $q;
     }
 
     public function scopePendientes(Builder $q): Builder

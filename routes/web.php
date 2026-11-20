@@ -2,26 +2,27 @@
 
 use App\Http\Controllers\AlertasController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ControlController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportarTicketsController;
+use App\Http\Controllers\GastoController;
 use App\Http\Controllers\GpsController;
 use App\Http\Controllers\GoogleOAuthController;
+use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\SitiosController;
+use App\Http\Controllers\TicketCrearController;
 use App\Http\Controllers\UsuariosController;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('dashboard'));
+// ====== landing pública ======
+Route::view('/', 'landing.index')->name('landing');
 
 // ====== sesion ======
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware(['guest', 'throttle:5,1']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
-
-// ====== registro publico (queda PENDIENTE hasta que el admin lo acepte) ======
-Route::get('/registro', [AuthController::class, 'showRegistro'])->name('registro')->middleware('guest');
-Route::post('/registro', [AuthController::class, 'registro'])->name('registro.post')->middleware(['guest', 'throttle:5,1']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -29,8 +30,17 @@ Route::middleware('auth')->group(function () {
     // ====== tickets: todos los roles ======
     Route::get('/tickets-exportar', ExportarTicketsController::class)->name('tickets.exportar');
     Route::view('/tickets', 'tickets.index')->name('tickets.index');
+
+    // ====== crear ticket manual (formulario) ======
+    Route::get('/tickets/crear', [TicketCrearController::class, 'create'])->name('tickets.crear');
+    Route::post('/tickets/crear', [TicketCrearController::class, 'store'])->name('tickets.crear.store');
+
     Route::get('/tickets/{ticket}', fn (Ticket $ticket) => view('tickets.show', compact('ticket')))
         ->name('tickets.show');
+
+    // ====== cambio obligatorio de contraseña (primer login) ======
+    Route::get('/password/cambiar', [PasswordController::class, 'showCambiar'])->name('password.cambiar');
+    Route::post('/password/cambiar', [PasswordController::class, 'cambiar'])->name('password.cambiar.post');
 
     // ====== perfil del usuario ======
     Route::get('/perfil', [PerfilController::class, 'index'])->name('perfil.index');
@@ -41,6 +51,9 @@ Route::middleware('auth')->group(function () {
     // ====== Google Drive OAuth (admin/supervisor) ======
     Route::get('/google/auth', [GoogleOAuthController::class, 'redirect'])->name('google.auth');
     Route::get('/google/callback', [GoogleOAuthController::class, 'callback'])->name('google.callback');
+
+    // ====== control de gasto (admin y supervisor) ======
+    Route::get('/gastos', [GastoController::class, 'index'])->name('gastos.index');
 
     // ====== mapa en vivo ======
     Route::view('/mapa', 'mapa.index')->name('mapa.index');
@@ -65,9 +78,16 @@ Route::middleware('auth')->group(function () {
     // ====== solo admin ======
     Route::middleware('role:admin')->group(function () {
         Route::get('/usuarios', [UsuariosController::class, 'index'])->name('usuarios.index');
-        Route::post('/usuarios/{user}/aceptar', [UsuariosController::class, 'aceptar'])->name('usuarios.aceptar');
-        Route::post('/usuarios/{user}/rechazar', [UsuariosController::class, 'rechazar'])->name('usuarios.rechazar');
+        Route::get('/usuarios/crear', [UsuariosController::class, 'crear'])->name('usuarios.crear');
+        Route::post('/usuarios', [UsuariosController::class, 'store'])->name('usuarios.store');
         Route::post('/usuarios/{user}/alternar-activo', [UsuariosController::class, 'alternarActivo'])->name('usuarios.alternar');
+
+        // ====== asignar zonas a supervisores ======
+        Route::get('/usuarios/{user}/zonas', [UsuariosController::class, 'zonas'])->name('usuarios.zonas');
+        Route::post('/usuarios/{user}/zonas', [UsuariosController::class, 'zonasStore'])->name('usuarios.zonas.store');
+
+        // ====== panel de control (solo admin, solo lectura) ======
+        Route::get('/control', [ControlController::class, '__invoke'])->name('control.index');
 
         Route::get('/alertas', [AlertasController::class, 'index'])->name('alertas.index');
         Route::post('/alertas/{alerta}/leer', [AlertasController::class, 'marcarLeida'])->name('alertas.leer');

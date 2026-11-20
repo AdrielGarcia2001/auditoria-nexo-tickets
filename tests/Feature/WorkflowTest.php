@@ -14,17 +14,17 @@ class WorkflowTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => User::ROLE_ADMIN, 'activo' => true, 'solicitud_estado' => User::SOLICITUD_ACEPTADO]);
+        return User::factory()->create(['role' => User::ROLE_ADMIN, 'activo' => true, 'password_cambiado' => true]);
     }
 
     private function supervisor(): User
     {
-        return User::factory()->create(['role' => User::ROLE_SUPERVISOR, 'activo' => true, 'solicitud_estado' => User::SOLICITUD_ACEPTADO]);
+        return User::factory()->create(['role' => User::ROLE_SUPERVISOR, 'activo' => true, 'password_cambiado' => true]);
     }
 
     private function tecnico(): User
     {
-        return User::factory()->create(['role' => User::ROLE_TECNICO, 'area' => User::AREA_MANTENIMIENTO, 'activo' => true, 'solicitud_estado' => User::SOLICITUD_ACEPTADO]);
+        return User::factory()->create(['role' => User::ROLE_TECNICO, 'area' => User::AREA_MANTENIMIENTO, 'activo' => true, 'password_cambiado' => true]);
     }
 
     private function ticketNuevo(): Ticket

@@ -32,6 +32,7 @@
                 <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Sitio</th>
+                        <th class="px-4 py-3">Zona</th>
                         <th class="px-4 py-3">Provincia</th>
                         <th class="px-4 py-3">Tickets</th>
                         <th class="px-4 py-3">Técnicos fijos</th>
@@ -45,6 +46,15 @@
                             <td class="px-4 py-3">
                                 <div class="font-medium text-slate-900">{{ $sitio->nombre }}</div>
                                 <div class="text-xs text-slate-400">{{ $sitio->calle }}</div>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                @if ($sitio->zona)
+                                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200">
+                                        {{ $sitio->zona->nombre }} ({{ $sitio->zona->codigo }})
+                                    </span>
+                                @else
+                                    <span class="text-xs text-slate-400">—</span>
+                                @endif
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $sitio->provincia_nombre }}</td>
                             <td class="whitespace-nowrap px-4 py-3">

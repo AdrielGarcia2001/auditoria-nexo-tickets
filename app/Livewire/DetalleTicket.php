@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\ArticuloInventario;
+use App\Models\ConsumibleTicket;
 use App\Models\Ticket;
 use App\Models\TicketComentario;
 use App\Models\TicketFoto;
@@ -38,25 +40,14 @@ class DetalleTicket extends Component
     /** @var array<int, int> */
     public array $tecnicosSeleccionados = [];
 
-    // ====== edicion de datos del Excel (solo admin) ======
-    public bool $mostrarEditar = false;
-    public string $edit_texto_breve = '';
-    public string $edit_descripcion = '';
-    public string $edit_ubicacion = '';
-    public string $edit_calle = '';
-    public string $edit_prioridad = '';
-    public string $edit_estado = '';
-    public string $edit_estatus = '';
-    public string $edit_comentarios = '';
-    public string $edit_comentarios_extra = '';
-    public string $edit_doc_adjunto = '';
-    public string $edit_lo_resolvio = '';
-
     public string $nuevoComentario = '';
+
+    // ====== insumos / consumibles ======
+    public $articuloId = null;
+    public int $cantidad = 1;
 
     // ====== fotos ======
     public ?\Livewire\Features\SupportFileUploads\TemporaryUploadedFile $foto = null;
-    public string $tipoFoto = 'antes';
 
     public ?string $exito = null;
     public ?string $errorAccion = null;
@@ -65,85 +56,6 @@ class DetalleTicket extends Component
     {
         $this->ticketId = $ticketId;
         $this->tecnicosSeleccionados = $this->ticket()->tecnicos()->pluck('users.id')->all();
-    }
-
-    /** Abre el modal de edicion con los valores actuales del ticket (solo admin). */
-    public function abrirEditar(): void
-    {
-        if (! Auth::user()?->isAdmin()) {
-            $this->errorAccion = 'Solo el administrador puede editar los datos del ticket.';
-
-            return;
-        }
-
-        $t = $this->ticket();
-        $this->edit_texto_breve = (string) ($t->texto_breve ?? '');
-        $this->edit_descripcion = (string) ($t->descripcion ?? '');
-        $this->edit_ubicacion = (string) ($t->ubicacion ?? '');
-        $this->edit_calle = (string) ($t->calle ?? '');
-        $this->edit_prioridad = (string) ($t->prioridad ?? '');
-        $this->edit_estado = (string) ($t->estado ?? '');
-        $this->edit_estatus = (string) ($t->estatus ?? '');
-        $this->edit_comentarios = (string) ($t->comentarios ?? '');
-        $this->edit_comentarios_extra = (string) ($t->comentarios_extra ?? '');
-        $this->edit_doc_adjunto = (string) ($t->doc_adjunto ?? '');
-        $this->edit_lo_resolvio = (string) ($t->lo_resolvio ?? '');
-        $this->mostrarEditar = true;
-        $this->errorAccion = null;
-    }
-
-    /** Guarda la edicion del admin y registra en el historial. */
-    public function guardarEdicion(): void
-    {
-        if (! Auth::user()?->isAdmin()) {
-            $this->errorAccion = 'Solo el administrador puede editar los datos del ticket.';
-
-            return;
-        }
-
-        $t = $this->ticket();
-
-        $antes = [
-            'texto_breve' => $t->texto_breve,
-            'descripcion' => $t->descripcion,
-            'ubicacion' => $t->ubicacion,
-            'calle' => $t->calle,
-            'prioridad' => $t->prioridad,
-            'estado' => $t->estado,
-            'estatus' => $t->estatus,
-            'comentarios' => $t->comentarios,
-            'comentarios_extra' => $t->comentarios_extra,
-            'doc_adjunto' => $t->doc_adjunto,
-            'lo_resolvio' => $t->lo_resolvio,
-        ];
-
-        $t->fill([
-            'texto_breve' => $this->edit_texto_breve !== '' ? $this->edit_texto_breve : null,
-            'descripcion' => $this->edit_descripcion !== '' ? $this->edit_descripcion : null,
-            'ubicacion' => $this->edit_ubicacion !== '' ? $this->edit_ubicacion : null,
-            'calle' => $this->edit_calle !== '' ? $this->edit_calle : null,
-            'prioridad' => $this->edit_prioridad !== '' ? $this->edit_prioridad : null,
-            'estado' => $this->edit_estado !== '' ? $this->edit_estado : null,
-            'estatus' => $this->edit_estatus !== '' ? $this->edit_estatus : null,
-            'comentarios' => $this->edit_comentarios !== '' ? $this->edit_comentarios : null,
-            'comentarios_extra' => $this->edit_comentarios_extra !== '' ? $this->edit_comentarios_extra : null,
-            'doc_adjunto' => $this->edit_doc_adjunto !== '' ? $this->edit_doc_adjunto : null,
-            'lo_resolvio' => $this->edit_lo_resolvio !== '' ? $this->edit_lo_resolvio : null,
-        ]);
-
-        // recalcula SLA si cambio la prioridad
-        $t->calcularSlaVencimiento();
-        $t->save();
-
-        TicketHistorial::create([
-            'ticket_id' => $t->id,
-            'user_id' => Auth::id(),
-            'accion' => 'editado',
-            'detalles' => ['antes' => $antes, 'despues' => $t->only(array_keys($antes))],
-        ]);
-
-        $this->mostrarEditar = false;
-        $this->exito = '✏️ Datos del ticket actualizados.';
     }
 
     // ======================================================================
@@ -215,8 +127,20 @@ class DetalleTicket extends Component
     {
         $this->errorAccion = null;
 
+        $usuario = Auth::user();
+
+        // un supervisor solo puede asignar a sus propios tecnicos
+        if ($usuario->isSupervisor()) {
+            $tecnicosValidos = $usuario->tecnicoIds();
+            $invalidos = array_diff($this->tecnicosSeleccionados, $tecnicosValidos);
+            if (! empty($invalidos)) {
+                $this->errorAccion = 'Solo podés asignar técnicos que estén bajo tu supervisión.';
+                return;
+            }
+        }
+
         try {
-            $this->flujo()->asignar($this->ticket(), $this->tecnicosSeleccionados, Auth::user());
+            $this->flujo()->asignar($this->ticket(), $this->tecnicosSeleccionados, $usuario);
             $this->exito = '👷 Técnicos asignados.';
             $this->mostrarAsignar = false;
         } catch (\Throwable $e) {
@@ -246,14 +170,19 @@ class DetalleTicket extends Component
         $this->exito = '💬 Comentario agregado.';
     }
 
-    public function subirFoto(?double $lat = null, ?double $lng = null): void
+    public function subirFoto(?float $lat = null, ?float $lng = null): void
     {
         $this->errorAccion = null;
+
+        // solo tecnicos pueden subir fotos
+        if (! Auth::user()?->isTecnico()) {
+            $this->errorAccion = 'Solo los técnicos pueden subir fotos.';
+            return;
+        }
 
         try {
             $this->validate([
                 'foto' => ['required', 'image', 'max:10240'],
-                'tipoFoto' => ['required', 'in:antes,despues'],
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->errorAccion = 'Elegí una foto válida (jpg/png, hasta 10 MB).';
@@ -263,24 +192,26 @@ class DetalleTicket extends Component
 
         $ticket = $this->ticket();
 
-        $ruta = $this->foto->store('fotos-tickets/'.$ticket->id, 'public');
+        // comprimir la imagen antes de guardar (sin perder calidad apreciable)
+        $rutaComprimida = $this->comprimirImagen($this->foto, 'fotos-tickets/'.$ticket->id);
 
         // copia a Google Drive (si esta configurado)
         $urlDrive = app(GoogleDriveService::class)->subirFoto(
             $ticket,
-            storage_path('app/'.$ruta),
+            storage_path('app/'.$rutaComprimida),
             $this->foto->getClientOriginalName(),
-            $this->tipoFoto
+            'foto'
         );
 
         TicketFoto::create([
             'ticket_id' => $ticket->id,
             'user_id' => Auth::id(),
-            'tipo' => $this->tipoFoto,
-            'ruta' => $ruta,
+            'tipo' => 'foto',
+            'ruta' => $rutaComprimida,
             'drive_url' => $urlDrive,
             'lat' => $lat,
             'lng' => $lng,
+            'direccion' => '',
             'tomada_at' => now(),
         ]);
 
@@ -288,11 +219,100 @@ class DetalleTicket extends Component
             'ticket_id' => $ticket->id,
             'user_id' => Auth::id(),
             'accion' => 'foto',
-            'detalles' => ['tipo' => $this->tipoFoto, 'drive' => $urlDrive],
+            'detalles' => ['tipo' => 'foto', 'drive' => $urlDrive],
         ]);
 
         $this->foto = null;
         $this->exito = '📷 Foto subida'.($urlDrive ? ' (copiada a Drive).' : '.');
+    }
+
+    /** Comprime una imagen subida con Livewire y devuelve la ruta guardada. */
+    private function comprimirImagen(\Livewire\Features\SupportFileUploads\TemporaryUploadedFile $file, string $carpeta): string
+    {
+        $rutaOrigen = $file->getRealPath();
+        $info = getimagesize($rutaOrigen);
+        $anchoOrigen = $info[0];
+        $altoOrigen = $info[1];
+
+        // maximo 1920px en el lado mas largo
+        $max = 1920;
+        $ratio = $anchoOrigen / $altoOrigen;
+        if ($anchoOrigen > $max || $altoOrigen > $max) {
+            if ($anchoOrigen > $altoOrigen) {
+                $ancho = $max;
+                $alto = (int) round($max / $ratio);
+            } else {
+                $alto = $max;
+                $ancho = (int) round($max * $ratio);
+            }
+        } else {
+            $ancho = $anchoOrigen;
+            $alto = $altoOrigen;
+        }
+
+        $destino = imagecreatetruecolor($ancho, $alto);
+
+        switch ($info['mime']) {
+            case 'image/jpeg':
+                $origen = imagecreatefromjpeg($rutaOrigen);
+                imagecopyresampled($destino, $origen, 0, 0, 0, 0, $ancho, $alto, $anchoOrigen, $altoOrigen);
+                $rutaGuardado = storage_path('app/public/'.$carpeta.'/'.uniqid().'.jpg');
+                @mkdir(dirname($rutaGuardado), 0755, true);
+                imagejpeg($destino, $rutaGuardado, 88);
+                imagedestroy($origen);
+                break;
+            case 'image/png':
+                $origen = imagecreatefrompng($rutaOrigen);
+                imagecopyresampled($destino, $origen, 0, 0, 0, 0, $ancho, $alto, $anchoOrigen, $altoOrigen);
+                $rutaGuardado = storage_path('app/public/'.$carpeta.'/'.uniqid().'.png');
+                @mkdir(dirname($rutaGuardado), 0755, true);
+                imagepng($destino, $rutaGuardado, 8);
+                imagedestroy($origen);
+                break;
+            default:
+                $rutaGuardado = $file->store($carpeta, 'public');
+        }
+
+        imagedestroy($destino);
+
+        // devolver ruta relativa para storage
+        return str_replace(storage_path('app/public/').'', '', $rutaGuardado);
+    }
+
+    // ======================================================================
+    //  INSUMOS / CONSUMIBLES
+    // ======================================================================
+
+    public function registrarConsumible(): void
+    {
+        $this->errorAccion = null;
+
+        if (! Auth::user()?->puedeGestionar()) {
+            $this->errorAccion = 'Solo supervisores y administradores pueden registrar insumos.';
+            return;
+        }
+
+        $this->validate([
+            'articuloId' => ['required', 'exists:articulos_inventario,id'],
+            'cantidad' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $articulo = ArticuloInventario::findOrFail($this->articuloId);
+
+        ConsumibleTicket::create([
+            'ticket_id' => $this->ticketId,
+            'articulo_id' => $articulo->id,
+            'cantidad_utilizada' => $this->cantidad,
+            'precio_unitario_momento' => $articulo->precio_unitario,
+            'registrado_por' => Auth::id(),
+            'consumido_at' => now(),
+        ]);
+
+        $articulo->decrement('stock_actual', $this->cantidad);
+
+        $this->articuloId = null;
+        $this->cantidad = 1;
+        $this->exito = '🧾 Insumo registrado y stock actualizado.';
     }
 
     // ======================================================================
@@ -304,16 +324,26 @@ class DetalleTicket extends Component
         $ticket = $this->ticket();
         $usuario = Auth::user();
 
-        $tecnicosDisponibles = User::where('role', User::ROLE_TECNICO)
-            ->where('activo', true)
-            ->orderBy('area')
-            ->orderBy('name')
-            ->get();
+        if ($usuario->isSupervisor()) {
+            $tecnicosDisponibles = $usuario->tecnicos();
+        } elseif ($usuario->isAdmin()) {
+            $tecnicosDisponibles = User::where('role', User::ROLE_TECNICO)
+                ->where('activo', true)
+                ->orderBy('area')
+                ->orderBy('name')
+                ->get();
+        } else {
+            $tecnicosDisponibles = collect();
+        }
+
+        $articulos = ArticuloInventario::where('activo', true)->orderBy('nombre_articulo')->get();
 
         return view('livewire.detalle-ticket', [
             'ticket' => $ticket,
             'usuario' => $usuario,
             'tecnicosDisponibles' => $tecnicosDisponibles,
+            'articulos' => $articulos,
+            'consumibles' => $ticket->consumibles()->with('articulo')->latest('consumido_at')->get(),
             'puedeAsignar' => $usuario->puedeGestionar(),
             'puedeResolver' => $usuario->puedeGestionar() && $ticket->puedeResolverse(),
             'puedeCerrar' => $usuario->isAdmin() && $ticket->puedeCerrarse(),

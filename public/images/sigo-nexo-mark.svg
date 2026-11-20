@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="SIGO-NEXO">
+  <defs>
+    <linearGradient id="n" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e40af"/>
+      <stop offset="1" stop-color="#0b2f6b"/>
+    </linearGradient>
+    <linearGradient id="orbit" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- órbita -->
+  <ellipse cx="60" cy="64" rx="52" ry="25" fill="none" stroke="url(#orbit)" stroke-width="5"
+           transform="rotate(-22 60 64)" stroke-linecap="round"/>
+
+  <!-- letra N -->
+  <path d="M28 90 V30 h14 l26 32 V30 h14 v60 H68 L42 58 v32z" fill="url(#n)"/>
+
+  <!-- engranaje -->
+  <g transform="translate(60 49)">
+    <g fill="#0b2f6b">
+      <circle r="19"/>
+      <rect x="-3.4" y="-27" width="6.8" height="8" rx="2"/>
+      <rect x="-3.4" y="19" width="6.8" height="8" rx="2"/>
+      <rect x="-27" y="-3.4" width="8" height="6.8" rx="2"/>
+      <rect x="19" y="-3.4" width="8" height="6.8" rx="2"/>
+      <rect x="-21" y="-21" width="7" height="7" rx="1.6" transform="rotate(45 -17.5 -17.5)"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.6" transform="rotate(45 17.5 17.5)"/>
+      <rect x="14" y="-21" width="7" height="7" rx="1.6" transform="rotate(-45 17.5 -17.5)"/>
+      <rect x="-21" y="14" width="7" height="7" rx="1.6" transform="rotate(-45 -17.5 17.5)"/>
+    </g>
+    <circle r="9" fill="#ffffff"/>
+    <!-- llave inglesa -->
+    <path d="M-5 4 L4 -5 M1.6 -5.2 a2.6 2.6 0 1 0 0.9 3.7 M-5 4 l1.6 1.6"
+          fill="none" stroke="#1e40af" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

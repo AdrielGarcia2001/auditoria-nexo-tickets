@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
-    'nombre', 'calle', 'provincia_codigo', 'provincia_nombre',
+    'nombre', 'calle', 'provincia_codigo', 'provincia_nombre', 'zona_id',
     'lat', 'lng', 'notas',
 ])]
 class Sitio extends Model
@@ -38,5 +38,10 @@ class Sitio extends Model
     public function contratoSla(): HasOne
     {
         return $this->hasOne(ContratoSla::class);
+    }
+
+    public function zona(): BelongsTo
+    {
+        return $this->belongsTo(Zona::class);
     }
 }

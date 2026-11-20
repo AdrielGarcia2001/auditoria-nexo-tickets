@@ -57,9 +57,8 @@ class ListaTickets extends Component
     {
         $usuario = Auth::user();
 
-        $query = Ticket::query()
+        $query = Ticket::porRol($usuario)
             ->with(['sitio', 'tecnicos'])
-            ->when($usuario->isTecnico(), fn ($q) => $q->delTecnico($usuario))
             ->when($this->busqueda !== '', function ($q) {
                 $termino = '%'.$this->busqueda.'%';
                 $q->where(function ($q2) use ($termino) {
@@ -93,12 +92,9 @@ class ListaTickets extends Component
             'tickets' => $query->paginate(20),
             'prioridades' => array_keys(Ticket::PRIORIDAD_HORAS) + ['Programado Mensual'],
             'totales' => [
-                'nuevos' => Ticket::where('estado_workflow', Ticket::NUEVO)
-                    ->when($usuario->isTecnico(), fn ($q) => $q->delTecnico($usuario))->count(),
-                'resueltos' => Ticket::where('estado_workflow', Ticket::RESUELTO)
-                    ->when($usuario->isTecnico(), fn ($q) => $q->delTecnico($usuario))->count(),
-                'cerrados' => Ticket::where('estado_workflow', Ticket::CERRADO)
-                    ->when($usuario->isTecnico(), fn ($q) => $q->delTecnico($usuario))->count(),
+                'nuevos' => Ticket::porRol($usuario)->where('estado_workflow', Ticket::NUEVO)->count(),
+                'resueltos' => Ticket::porRol($usuario)->where('estado_workflow', Ticket::RESUELTO)->count(),
+                'cerrados' => Ticket::porRol($usuario)->where('estado_workflow', Ticket::CERRADO)->count(),
             ],
         ]);
     }
