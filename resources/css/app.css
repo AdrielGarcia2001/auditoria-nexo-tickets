@@ -5,7 +5,21 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-night-900: #070b14;
+    --color-night-800: #0a0f1d;
+    --color-night-700: #0f172a;
+    --color-night-600: #111827;
+    --color-cy-400: #22d3ee;
+    --color-cy-500: #06b6d4;
 }
+
+/* Alpine: oculta elementos hasta que x-cloak se elimina tras la inicialización */
+[x-cloak] { display: none !important; }
+
+/* Scroll suave para anclas de la landing */
+html { scroll-behavior: smooth; }

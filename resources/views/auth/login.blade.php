@@ -12,8 +12,8 @@
 <body class="flex min-h-full items-center justify-center bg-slate-900 p-4">
     <div class="w-full max-w-sm">
         <div class="mb-6 text-center text-white">
-            <div class="text-4xl">🎫</div>
-            <h1 class="mt-2 text-xl font-semibold">Nexo · Auditoría de Tickets</h1>
+            <img src="/images/sigo-nexo-mark.svg" alt="SIGO-NEXO" class="mx-auto h-14 w-14">
+            <h1 class="mt-2 text-xl font-semibold">SIGO<span class="text-blue-400">-NEXO</span> <span class="text-slate-400 font-normal">· Auditoría de Tickets</span></h1>
             <p class="text-sm text-slate-400">Cuadrilla técnica y control en tiempo real</p>
         </div>
 
@@ -55,12 +55,10 @@
         </form>
 
         <p class="mt-4 text-center text-xs text-slate-500">
-            ¿Problemas para entrar? Contactá al administrador del sistema.
+            Si no tenés cuenta, contactá al administrador del sistema.
         </p>
-
-        <p class="mt-3 text-center text-sm text-slate-400">
-            ¿No tenés cuenta?
-            <a href="{{ route('registro') }}" class="font-semibold text-white hover:underline">Creala acá</a>
+        <p class="mt-3 text-center text-xs text-slate-500">
+            <a href="{{ route('landing') }}" class="hover:underline">← Volver al inicio</a>
         </p>
     </div>
 </body>
