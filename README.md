@@ -1,58 +1,308 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SIGO-NEXO
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Sistema Integrado de Gestión Operativa** — Auditoría de tickets, control de SLA y gestión de cuadrillas técnicas en campo.
 
-## About Laravel
+Landing pública en `/` · Aplicación privada en `/dashboard`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tabla de contenidos
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Stack tecnológico](#stack-tecnológico)
+- [Requisitos](#requisitos)
+- [Instalación local](#instalación-local)
+- [Base de datos PostgreSQL + PostGIS](#base-de-datos-postgresql--postgis)
+- [Variables de entorno](#variables-de-entorno)
+- [Ejecutar el proyecto](#ejecutar-el-proyecto)
+- [Pruebas](#pruebas)
+- [Roles y permisos](#roles-y-permisos)
+- [Estructura funcional](#estructura-funcional)
+- [Google Drive (opcional)](#google-drive-opcional)
+- [Despliegue](#despliegue)
+- [Convenciones de commits y ramas](#convenciones-de-commits-y-ramas)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Stack tecnológico
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Capa | Tecnología |
+|------|-----------|
+| Backend | Laravel 13 (PHP 8.3+) |
+| Vistas | Blade + Livewire 4 + Alpine.js |
+| Estilos | Tailwind CSS 4 + Vite 7 |
+| Base de datos | PostgreSQL 18 + PostGIS 3.6 (obligatorio) |
+| Tiempo real | Laravel Reverb + Laravel Echo |
+| Gráficos | Chart.js 4 |
+| Mapas | Leaflet + OpenStreetMap |
+| Archivos | Google Drive API |
+| PWA | Service Worker + IndexedDB + Background Sync |
+| Gestor de paquetes | pnpm (compatible con npm) |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+> ⚠️ **No se usa SQLite ni MySQL.** Las migraciones requieren PostGIS (tipo `geometry`).
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Requisitos
 
-```bash
-composer require laravel/boost --dev
+- PHP 8.3+ con extensiones `pdo_pgsql`, `pgsql`, `gd`
+- Composer 2
+- Node.js 20+ y pnpm
+- PostgreSQL 18 con PostGIS 3.6
 
-php artisan boost:install
+---
+
+## Instalación local
+
+```powershell
+cd C:\xampp\htdocs\auditoria-nexo-tickets
+
+composer install
+cp .env.example .env
+php artisan key:generate
+
+pnpm install
+pnpm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## Base de datos PostgreSQL + PostGIS
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 1. Crear usuario y base de datos
 
-## Code of Conduct
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Dentro de psql:
 
-## Security Vulnerabilities
+```sql
+CREATE USER laravel WITH PASSWORD 'laravel123';
+CREATE DATABASE auditoria_tickets OWNER laravel;
+CREATE DATABASE auditoria_tickets_test OWNER laravel;
+\q
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 2. Habilitar PostGIS en ambas bases
 
-## License
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d auditoria_tickets -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d auditoria_tickets -c "GRANT ALL ON SCHEMA public TO laravel;"
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d auditoria_tickets_test -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d auditoria_tickets_test -c "GRANT ALL ON SCHEMA public TO laravel;"
+```
+
+### 3. Migraciones y datos iniciales
+
+En PowerShell, forzando PostgreSQL en cada comando:
+
+```powershell
+$env:DB_CONNECTION='pgsql'; $env:DB_HOST='127.0.0.1'; $env:DB_PORT='5432'; $env:DB_DATABASE='auditoria_tickets'; $env:DB_USERNAME='laravel'; $env:DB_PASSWORD='laravel123'; php artisan migrate --force
+
+$env:DB_CONNECTION='pgsql'; $env:DB_HOST='127.0.0.1'; $env:DB_PORT='5432'; $env:DB_DATABASE='auditoria_tickets'; $env:DB_USERNAME='laravel'; $env:DB_PASSWORD='laravel123'; php artisan db:seed --force
+```
+
+> En Linux/macOS, reemplazá el prefijo `$env:VAR='...';` por `VAR=...` delante del comando.
+
+---
+
+## Variables de entorno
+
+Configurá estas secciones en `.env`:
+
+```dotenv
+APP_NAME=SIGO-NEXO
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=auditoria_tickets
+DB_USERNAME=laravel
+DB_PASSWORD=laravel123
+
+BROADCAST_CONNECTION=reverb
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+REVERB_APP_ID=...
+REVERB_APP_KEY=...
+REVERB_APP_SECRET=...
+REVERB_HOST=127.0.0.1
+REVERB_PORT=8080
+REVERB_SCHEME=http
+
+VITE_REVERB_APP_KEY=${REVERB_APP_KEY}
+VITE_REVERB_HOST=${REVERB_HOST}
+VITE_REVERB_PORT=${REVERB_PORT}
+VITE_REVERB_SCHEME=${REVERB_SCHEME}
+
+# Opcional: Google Drive
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REFRESH_TOKEN=
+GOOGLE_PARENT_FOLDER_ID=
+```
+
+Después de cambiar `.env`:
+
+```powershell
+php artisan config:clear
+```
+
+---
+
+## Ejecutar el proyecto
+
+Terminal 1 — servidor web:
+
+```powershell
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+Terminal 2 — WebSockets (mapa en vivo):
+
+```powershell
+php artisan reverb:start --host=127.0.0.1 --port=8080
+```
+
+Terminal 3 — cola de trabajos:
+
+```powershell
+php artisan queue:work
+```
+
+Terminal 4 — Vite (solo en desarrollo):
+
+```powershell
+pnpm run dev
+```
+
+### Usuarios de prueba (seeder)
+
+Todos con contraseña `password`:
+
+| Rol | Email |
+|-----|-------|
+| Administrador | `admin@nexo.com` |
+| Supervisor | `supervisor@nexo.com` |
+| Técnico mant. | `abel.garcia@nexo.com` |
+| Técnico mant. | `lucas.barreto@nexo.com` |
+| Técnico limp. | `santiago.garcia@nexo.com` |
+| Técnico limp. | `maria.ruiz@nexo.com` |
+
+> Las cuentas nuevas las crea el administrador con contraseña aleatoria; el usuario debe cambiarla al primer ingreso.
+
+---
+
+## Pruebas
+
+```powershell
+# Suite SQLite (ExampleTest)
+php vendor/bin/phpunit
+
+# Suite PostgreSQL + PostGIS (flujo completo)
+$env:DB_CONNECTION='pgsql'; $env:DB_HOST='127.0.0.1'; $env:DB_PORT='5432'; $env:DB_DATABASE='auditoria_tickets_test'; $env:DB_USERNAME='laravel'; $env:DB_PASSWORD='laravel123'; php vendor/bin/phpunit --configuration phpunit.pgsql.xml
+```
+
+Resultado esperado: `OK (2 tests, 3 assertions)` y `OK (8 tests, 18 assertions)`.
+
+---
+
+## Roles y permisos
+
+| Rol | Permisos |
+|-----|----------|
+| **Admin** | Todo: crea usuarios, zonas, contratos, cierra/reabre tickets, panel de control y gasto |
+| **Supervisor** | Crea tickets, asigna sus técnicos, ve solo sus zonas, resuelve, importa Excel |
+| **Técnico** | Ve solo sus tickets asignados, sube fotos con GPS, check-in/out |
+
+Relaciones:
+- Cada supervisor tiene **técnicos propios** (`supervisor_tecnicos`).
+- Cada supervisor gestiona **zonas específicas** (`supervisor_zonas`).
+- Cada sitio pertenece a una zona; el SLA se calcula según el contrato del sitio.
+
+---
+
+## Estructura funcional
+
+| Ruta | Descripción |
+|------|-------------|
+| `/` | Landing pública SIGO-NEXO (simulador Alpine, temas) |
+| `/login` | Ingreso |
+| `/dashboard` | Panel por rol |
+| `/tickets` | Listado filtrado por rol |
+| `/tickets/crear` | Alta manual (solo supervisores) |
+| `/importar` | Importación Excel con validación de hash y cambios |
+| `/sitios` | Sitios, zonas, técnicos fijos y contrato SLA |
+| `/mapa` | Mapa en vivo + GPS |
+| `/control` | Panel de control del admin (solo lectura) |
+| `/gastos` | Gasto por mes, gráficos torta/barras/lineales |
+| `/alertas` | Alertas SLA |
+| `/perfil` | Datos personales y token de Google Drive |
+
+---
+
+## Google Drive (opcional)
+
+1. Habilitá **Google Drive API** en Google Cloud.
+2. Credenciales OAuth → **Aplicación de escritorio** → copiá client ID y secret al `.env`.
+3. Obtené el refresh token:
+
+```powershell
+php artisan google:auth
+```
+
+4. Pegalo en **Mi perfil → Google Drive → Guardar token**.
+
+Sin Google configurado el sistema funciona igual: las fotos se guardan localmente.
+
+---
+
+## Despliegue
+
+```powershell
+composer install --optimize-autoloader --no-dev
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan migrate --force
+pnpm install --frozen-lockfile
+pnpm run build
+```
+
+Servicios a configurar en producción: PostgreSQL + PostGIS, Reverb, cola de trabajos y scheduler:
+
+```powershell
+php artisan schedule:work
+```
+
+---
+
+## Convenciones de commits y ramas
+
+Ramas técnicas:
+
+| Rama | Contenido |
+|------|-----------|
+| `database/esquemas-y-migraciones` | Migraciones |
+| `backend/logica-principal` | Modelos, controladores, Livewire, rutas, tests |
+| `frontend/landing-e-interfaz` | Vistas, CSS, JS, SVG |
+
+Commits en español (prefijo estándar en inglés, descripción en español):
+
+```powershell
+git commit -m "feat(backend): agregar filtro de tickets por zona"
+git commit -m "fix(frontend): corregir subtitulo del logo"
+git commit -m "refactor(db): unificar migraciones de zonas"
+git commit -m "chore: actualizar dependencias de pnpm"
+```
+
+Orden de merge de PRs: **base de datos → backend → frontend**.
+
+---
+
+## Licencia
+
+Uso interno · Nexo Obras y Servicios.
