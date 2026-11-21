@@ -10,6 +10,8 @@
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <!-- WorkflowTest requiere PostgreSQL + PostGIS: corre con phpunit.pgsql.xml -->
+            <exclude>tests/Feature/WorkflowTest.php</exclude>
         </testsuite>
     </testsuites>
     <source>

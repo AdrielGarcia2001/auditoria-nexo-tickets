@@ -2,22 +2,24 @@
 
 namespace App\Livewire;
 
+use App\Models\ImportacionExcel;
+use App\Models\Ticket;
 use App\Services\Importacion\ImportadorTickets;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 /**
  * Importador de tickets desde Excel (.xlsx) o export de Google Sheets.
- *
- * 1) sube archivo  2) elegís la hoja  3) ves TODO el contenido (preview)
- * 4) importa: cada fila se inserta como ticket NUEVO (nunca actualiza)
+ * El mismo archivo no se puede subir dos veces (hash).
+ * Tickets nuevos se insertan; tickets con cambios se actualizan.
  */
 class ImportadorExcel extends Component
 {
     use WithFileUploads;
 
     public ?\Livewire\Features\SupportFileUploads\TemporaryUploadedFile $archivo = null;
+
+    public ?string $hashArchivo = null;
 
     /** @var array<string, int> hojas del archivo => filas */
     public array $hojas = [];
@@ -34,6 +36,9 @@ class ImportadorExcel extends Component
     public int $filasMostradas = 0;
     public int $ignoradas = 0;
     public int $duplicados = 0;
+    public int $nuevos = 0;
+    public int $modificados = 0;
+    public int $sinCambios = 0;
 
     public ?string $tokenPreview = null;
 
@@ -46,9 +51,7 @@ class ImportadorExcel extends Component
 
     protected function rules(): array
     {
-        return [
-            'archivo' => ['required', 'file', 'mimes:xlsx,csv', 'max:102400'],
-        ];
+        return ['archivo' => ['required', 'file', 'mimes:xlsx,csv', 'max:102400']];
     }
 
     protected function messages(): array
@@ -60,23 +63,28 @@ class ImportadorExcel extends Component
         ];
     }
 
-    // ====== eventos ======
-
     public function updatedArchivo(): void
     {
         $this->validate();
 
         $ruta = $this->archivo->getRealPath();
 
+        $this->hashArchivo = hash_file('sha256', $ruta);
+
+        $yaImportado = ImportacionExcel::yaImportado($this->hashArchivo);
+        if ($yaImportado) {
+            $this->addError('archivo', 'Este archivo ya se importó anteriormente ('.$yaImportado->importado_at?->format('d/m/Y H:i').'). No se puede subir dos veces.');
+            $this->resetArchivo();
+            return;
+        }
+
         try {
             $this->hojas = $this->importador()->hojas($ruta);
         } catch (\Throwable $e) {
             $this->addError('archivo', 'No se pudo leer el archivo: '.$e->getMessage());
-
             return;
         }
 
-        // elige la primera hoja de tickets conocida
         $this->hojaSeleccionada = collect(ImportadorTickets::HOJAS_TICKETS)
             ->first(fn ($h) => isset($this->hojas[$h]))
             ?? array_key_first($this->hojas);
@@ -94,13 +102,11 @@ class ImportadorExcel extends Component
         $this->hojaSeleccionada = $hoja;
         $this->resultado = null;
 
-        // re-parsea desde el archivo original subido (si sigue disponible)
         $ruta = $this->archivo?->getRealPath();
 
         if (! $ruta || ! is_file($ruta)) {
             $this->resetArchivo();
             $this->addError('archivo', 'El archivo ya no está disponible, subilo de nuevo.');
-
             return;
         }
 
@@ -109,7 +115,7 @@ class ImportadorExcel extends Component
 
     public function importar(): void
     {
-        if (! $this->hojaSeleccionada || ! $this->tokenPreview) {
+        if (! $this->hojaSeleccionada || ! $this->tokenPreview || ! $this->hashArchivo) {
             return;
         }
 
@@ -117,7 +123,6 @@ class ImportadorExcel extends Component
 
         if (! is_file($rutaDatos)) {
             $this->addError('archivo', 'La vista previa expiró. Subí el archivo de nuevo.');
-
             return;
         }
 
@@ -127,11 +132,64 @@ class ImportadorExcel extends Component
             $datos = json_decode((string) file_get_contents($rutaDatos), true) ?: [];
             $filas = $datos['filas'] ?? [];
 
+            // clasificar: nuevos | modificados (con cambios) | sin cambios
+            $nuevos = [];
+            $modificados = [];
+            $sinCambios = 0;
+
+            foreach ($filas as $fila) {
+                $numeroOrden = $fila['numero_orden'] ?? '';
+                $ubicacion = $fila['ubicacion'] ?? '';
+                $fechaEntrada = $fila['fecha_entrada'] ?? null;
+
+                $existe = Ticket::query()
+                    ->where('numero_orden', $numeroOrden)
+                    ->when($ubicacion, fn ($q) => $q->where('ubicacion', $ubicacion))
+                    ->when($fechaEntrada, fn ($q) => $q->whereDate('fecha_entrada', $fechaEntrada))
+                    ->first();
+
+                if (! $existe) {
+                    $nuevos[] = $fila;
+                } elseif ($this->importador()->esIgual($existe, $fila)) {
+                    $sinCambios++;
+                } else {
+                    $modificados[] = ['ticket' => $existe, 'fila' => $fila];
+                }
+            }
+
+            $this->nuevos = count($nuevos);
+            $this->modificados = count($modificados);
+            $this->sinCambios = $sinCambios;
+
             $resultado = $this->importador()->importar(
-                $filas,
+                $nuevos,
                 auth()->user(),
                 $this->hojaSeleccionada
             );
+
+            $cambiosAplicados = 0;
+            foreach ($modificados as $item) {
+                if ($this->importador()->aplicarCambios(
+                    $item['ticket'],
+                    $item['fila'],
+                    auth()->user(),
+                    $this->hojaSeleccionada
+                )) {
+                    $cambiosAplicados++;
+                }
+            }
+
+            $resultado['modificados'] = $cambiosAplicados;
+            $resultado['sin_cambios'] = $sinCambios;
+
+            ImportacionExcel::create([
+                'nombre_archivo' => $this->archivo?->getClientOriginalName() ?? 'archivo.xlsx',
+                'hash_archivo' => $this->hashArchivo,
+                'usuario_id' => auth()->id(),
+                'total_filas' => count($filas),
+                'importados' => $resultado['importados'],
+                'importado_at' => now(),
+            ]);
 
             $this->resultado = $resultado;
             unset($resultado);
@@ -152,15 +210,28 @@ class ImportadorExcel extends Component
         }
 
         $this->reset(['archivo', 'hojas', 'hojaSeleccionada', 'columnas', 'filas',
-            'totalFilas', 'ignoradas', 'duplicados', 'tokenPreview', 'resultado']);
+            'totalFilas', 'ignoradas', 'duplicados', 'tokenPreview', 'resultado',
+            'nuevos', 'modificados', 'sinCambios', 'hashArchivo']);
         $this->resetValidation();
     }
-
-    // ====== render ======
 
     public function render()
     {
         return view('livewire.importador-excel');
+    }
+
+    /** Devuelve el campo del sistema correspondiente a un encabezado del Excel. */
+    public function campoDe(string $columna): string
+    {
+        $normalizada = preg_replace('/\s+/u', ' ', mb_strtolower(trim(str_replace('°', '', $columna)), 'UTF-8'));
+        $mapa = [
+            'n orden' => 'numero_orden', 'orden' => 'numero_orden',
+            'clase orden' => 'clase_orden', 'fecha entrada' => 'fecha_entrada',
+            'grupo planificador' => 'grupo_planificador', 'texto breve' => 'texto_breve',
+            'ubicacion' => 'ubicacion', 'prioridad' => 'prioridad', 'estado' => 'estado',
+        ];
+
+        return $mapa[$normalizada] ?? $normalizada;
     }
 
     // ====== internos ======
@@ -176,7 +247,6 @@ class ImportadorExcel extends Component
             $parseo = $this->importador()->parsear($ruta, (string) $this->hojaSeleccionada);
         } catch (\Throwable $e) {
             $this->addError('archivo', $e->getMessage());
-
             return;
         }
 
@@ -187,7 +257,6 @@ class ImportadorExcel extends Component
         $this->filas = array_slice($parseo['filas'], 0, self::MAX_PREVIEW);
         $this->filasMostradas = count($this->filas);
 
-        // guarda el parseo completo para importar despues (sin re-subir)
         $this->tokenPreview = $this->tokenPreview ?: bin2hex(random_bytes(16));
         $directorio = storage_path('app/imports');
         if (! is_dir($directorio)) {
@@ -209,7 +278,8 @@ class ImportadorExcel extends Component
     private function resetArchivo(): void
     {
         $this->reset(['archivo', 'hojas', 'hojaSeleccionada', 'columnas', 'filas',
-            'totalFilas', 'ignoradas', 'duplicados', 'tokenPreview']);
+            'totalFilas', 'ignoradas', 'duplicados', 'tokenPreview',
+            'nuevos', 'modificados', 'sinCambios', 'hashArchivo']);
         $this->resetValidation();
     }
 

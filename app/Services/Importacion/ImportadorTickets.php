@@ -13,85 +13,50 @@ use OpenSpout\Reader\XLSX\Reader as XlsxReader;
  * Importa tickets desde el Excel real de Formosa (o export de Google Sheets).
  *
  * Reglas del negocio:
- *  - NUNCA actualiza: cada fila se inserta como ticket nuevo
- *    (el N° ORDEN se repite en distintos sitios, ej. 402000037727 -> Incone y Eva Peron).
+ *  - El mismo archivo no se sube dos veces (hash).
+ *  - Tickets nuevos se insertan; tickets existentes con cambios se actualizan.
  *  - Refleja SI o SI los campos del Excel (mapeo por nombre de columna).
- *  - ESTADO del Excel "REALIZADO" entra como workflow "resuelto"; el resto entra "nuevo".
  */
 class ImportadorTickets
 {
-    /** Codigo de provincia (hoja Referencias) => nombre. */
     public const PROVINCIAS = [
-        'A32' => 'CHACO',
-        'A33' => 'CORRIENTES',
-        'A34' => 'ENTRE RIOS',
-        'A35' => 'MISIONES',
-        'A36' => 'FORMOSA',
-        'A41' => 'CATAMARCA',
-        'A43' => 'JUJUY',
-        'A45' => 'RIOJA',
-        'A47' => 'SALTA',
-        'A48' => 'SANTIAGO DEL ESTERO',
+        'A32' => 'CHACO', 'A33' => 'CORRIENTES', 'A34' => 'ENTRE RIOS',
+        'A35' => 'MISIONES', 'A36' => 'FORMOSA', 'A41' => 'CATAMARCA',
+        'A43' => 'JUJUY', 'A45' => 'RIOJA', 'A47' => 'SALTA', 'A48' => 'SANTIAGO DEL ESTERO',
     ];
 
-    /** Hojas con formato de tickets (excluye Referencias y control). */
     public const HOJAS_TICKETS = [
-        'Tks Correctivos',
-        'Tks Preventivos',
-        'MANT (M01PR004)',
-        'LIMP (M01PR012)',
-        'MANT CORRECTIVO 2022',
+        'Tks Correctivos', 'Tks Preventivos', 'MANT (M01PR004)',
+        'LIMP (M01PR012)', 'MANT CORRECTIVO 2022',
     ];
 
-    /** Nombre de columna normalizado => campo del sistema. */
     private const MAPEO_COLUMNAS = [
-        'mda' => 'mda',
-        'notificacion' => 'mda',
-        'mda (mesa de ayuda)' => 'mda',
-        'n orden' => 'numero_orden',
-        'orden' => 'numero_orden',
-        'clase orden' => 'clase_orden',
-        'clase de orden' => 'clase_orden',
+        'mda' => 'mda', 'notificacion' => 'mda', 'mda (mesa de ayuda)' => 'mda',
+        'n orden' => 'numero_orden', 'orden' => 'numero_orden',
+        'clase orden' => 'clase_orden', 'clase de orden' => 'clase_orden',
         'fecha entrada' => 'fecha_entrada',
         'fecha modific.maestro orden' => 'fecha_modificacion_maestro',
         'grupo planificador' => 'grupo_planificador',
-        'texto breve' => 'texto_breve',
-        'descripcion' => 'descripcion',
-        'calle' => 'calle',
-        'ubicacion' => 'ubicacion',
-        'denominacion de la ubicacion tecnica' => 'ubicacion',
-        'provincia' => 'provincia',
-        'ano' => 'anio',
-        'area de empresa' => 'area_empresa',
-        'doc. adj.' => 'doc_adjunto',
-        'inicio extrema' => 'inicio_extrema',
-        'fecha de inicio extrema' => 'inicio_extrema',
-        'fin extrema' => 'fin_extrema',
-        'fecha fin extrema' => 'fin_extrema',
-        'estatus' => 'estatus',
-        'status de usuario' => 'estatus',
-        'prioridad' => 'prioridad',
-        'texto para prioridad' => 'prioridad',
-        'estado' => 'estado',
-        'lo resolvio' => 'lo_resolvio',
-        'fecha de resolucion' => 'fecha_resolucion',
+        'texto breve' => 'texto_breve', 'descripcion' => 'descripcion', 'calle' => 'calle',
+        'ubicacion' => 'ubicacion', 'denominacion de la ubicacion tecnica' => 'ubicacion',
+        'provincia' => 'provincia', 'ano' => 'anio', 'area de empresa' => 'area_empresa',
+        'doc. adj.' => 'doc_adjunto', 'inicio extrema' => 'inicio_extrema',
+        'fecha de inicio extrema' => 'inicio_extrema', 'fin extrema' => 'fin_extrema',
+        'fecha fin extrema' => 'fin_extrema', 'estatus' => 'estatus',
+        'status de usuario' => 'estatus', 'prioridad' => 'prioridad',
+        'texto para prioridad' => 'prioridad', 'estado' => 'estado',
+        'lo resolvio' => 'lo_resolvio', 'fecha de resolucion' => 'fecha_resolucion',
         'documentacion (foto o doc)' => 'documentacion',
         'comentarios sobre la resolucion del ticket' => 'comentarios',
-        'fotos' => 'fotos_texto',
-        'comentarios' => 'comentarios_extra',
+        'fotos' => 'fotos_texto', 'comentarios' => 'comentarios_extra',
     ];
 
-    /** Campos que el Excel trae como numero serial de Excel (ej. 44938). */
     private const CAMPOS_FECHA = [
         'fecha_entrada', 'fecha_modificacion_maestro', 'inicio_extrema',
         'fin_extrema', 'fecha_resolucion',
     ];
 
-    /**
-     * Lista las hojas del archivo con su cantidad de filas.
-     *
-     * @return array<string, int>
-     */
+    /** @return array<string, int> */
     public function hojas(string $ruta): array
     {
         $reader = new XlsxReader();
@@ -106,11 +71,7 @@ class ImportadorTickets
         return $resultado;
     }
 
-    /**
-     * Parsea una hoja completa a filas mapeadas (sin guardar nada).
-     *
-     * @return array{columnas: array<int, string>, filas: array<int, array>, ignoradas: int}
-     */
+    /** @return array{columnas: array<int, string>, filas: array<int, array>, ignoradas: int} */
     public function parsear(string $ruta, string $hoja): array
     {
         $reader = new XlsxReader();
@@ -118,7 +79,7 @@ class ImportadorTickets
 
         $encontrada = false;
         $columnas = [];
-        $headerMap = [];   // indice => campo del sistema
+        $headerMap = [];
         $filas = [];
         $numeroFila = 0;
         $ignoradas = 0;
@@ -133,7 +94,6 @@ class ImportadorTickets
                 $numeroFila++;
                 $celdas = $fila->toArray();
 
-                // primera fila no vacia = encabezados
                 if ($columnas === []) {
                     if ($this->filaVacia($celdas)) {
                         continue;
@@ -147,16 +107,13 @@ class ImportadorTickets
 
                 if ($columnas !== [] && $this->filaVacia($celdas)) {
                     $ignoradas++;
-
                     continue;
                 }
 
                 $mapeada = $this->mapearFila($celdas, $headerMap);
 
-                // validacion minima: sin N° ORDEN no es ticket
                 if (($mapeada['numero_orden'] ?? '') === '') {
                     $ignoradas++;
-
                     continue;
                 }
 
@@ -177,19 +134,10 @@ class ImportadorTickets
             throw new \RuntimeException("La hoja '{$hoja}' no existe en el archivo.");
         }
 
-        return [
-            'columnas' => $columnas,
-            'filas' => $filas,
-            'ignoradas' => $ignoradas,
-        ];
+        return ['columnas' => $columnas, 'filas' => $filas, 'ignoradas' => $ignoradas];
     }
 
-    /**
-     * Inserta las filas parseadas como tickets NUEVOS (nunca actualiza).
-     *
-     * @param  array<int, array>  $filas
-     * @return array{importados: int, fallidos: array<int, string>}
-     */
+    /** @return array{importados: int, fallidos: array<int, string>} */
     public function importar(array $filas, User $usuario, string $hoja): array
     {
         $importados = 0;
@@ -198,8 +146,6 @@ class ImportadorTickets
         DB::transaction(function () use ($filas, $usuario, $hoja, &$importados, &$fallidos) {
             foreach ($filas as $i => $fila) {
                 try {
-                    // transaccion anidada = SAVEPOINT: si la fila falla, se revierte
-                    // solo ella y la transaccion general sigue viva (PostgreSQL)
                     DB::transaction(function () use ($fila, $usuario, $hoja, &$importados) {
                         $this->insertarFila($fila, $usuario, $hoja, $importados);
                     });
@@ -212,13 +158,88 @@ class ImportadorTickets
         return ['importados' => $importados, 'fallidos' => $fallidos];
     }
 
+    /**
+     * Compara una fila del Excel con un ticket existente.
+     * Devuelve true si son equivalentes (no hay cambios que aplicar).
+     */
+    public function esIgual(Ticket $ticket, array $fila): bool
+    {
+        foreach ($this->camposComparables($fila) as $campo => $valor) {
+            if ($this->valorComparable($ticket->{$campo}) !== $this->valorComparable($valor)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Aplica los cambios de una fila modificada a un ticket existente.
+     * Devuelve true si se aplicó al menos un cambio.
+     */
+    public function aplicarCambios(Ticket $ticket, array $fila, User $usuario, string $hoja): bool
+    {
+        $cambios = [];
+        $antes = [];
+
+        foreach ($this->camposComparables($fila) as $campo => $valor) {
+            if ($this->valorComparable($ticket->{$campo}) !== $this->valorComparable($valor)) {
+                $antes[$campo] = $ticket->{$campo};
+                $cambios[$campo] = $valor;
+            }
+        }
+
+        if (empty($cambios)) {
+            return false;
+        }
+
+        $ticket->fill($cambios);
+        $ticket->save();
+
+        TicketHistorial::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => $usuario->id,
+            'accion' => 'actualizado_desde_excel',
+            'detalles' => [
+                'hoja' => $hoja,
+                'fila' => $fila['_fila'] ?? null,
+                'antes' => $antes,
+                'despues' => $cambios,
+            ],
+        ]);
+
+        return true;
+    }
+
+    /** Campos del Excel que se pueden comparar/actualizar (excluye internos). */
+    private function camposComparables(array $fila): array
+    {
+        unset($fila['_fila'], $fila['_hoja'], $fila['_duplicado'], $fila['provincia']);
+
+        $fillable = array_flip((new Ticket())->getFillable());
+
+        return array_intersect_key($fila, $fillable);
+    }
+
+    /** Normaliza valores para comparar (fechas Carbon vs string Y-m-d). */
+    private function valorComparable(mixed $valor): ?string
+    {
+        if ($valor === null || $valor === '') {
+            return null;
+        }
+        if ($valor instanceof \DateTimeInterface) {
+            return $valor->format('Y-m-d');
+        }
+
+        return (string) $valor;
+    }
+
     private function insertarFila(array $fila, User $usuario, string $hoja, int &$importados): void
     {
         $datos = $fila;
         $datosFila = $datos['_fila'] ?? null;
         unset($datos['_fila'], $datos['_hoja'], $datos['_duplicado']);
 
-        // provincia A36 => codigo + nombre
         $provinciaCodigo = $this->codigoProvincia($datos['provincia'] ?? null)
             ?? $this->codigoProvincia($datos['area_empresa'] ?? null)
             ?? 'A36';
@@ -226,7 +247,6 @@ class ImportadorTickets
         $datos['provincia_nombre'] = self::PROVINCIAS[$provinciaCodigo] ?? strtoupper((string) ($datos['provincia'] ?? ''));
         unset($datos['provincia']);
 
-        // workflow inicial: REALIZADO entra resuelto, el resto nuevo
         $estadoExcel = strtoupper(trim((string) ($datos['estado'] ?? '')));
         if ($estadoExcel === 'REALIZADO') {
             $datos['estado_workflow'] = Ticket::RESUELTO;
@@ -243,14 +263,7 @@ class ImportadorTickets
         $datos['importado_at'] = now();
 
         $ticket = new Ticket($datos);
-
-        // sitio: match por nombre + provincia (si no existe, se crea)
-        $ticket->sitio_id = $this->sitioPara(
-            $ticket->ubicacion,
-            $ticket->calle,
-            $provinciaCodigo
-        );
-
+        $ticket->sitio_id = $this->sitioPara($ticket->ubicacion, $ticket->calle, $provinciaCodigo);
         $ticket->save();
 
         TicketHistorial::create([
@@ -276,7 +289,6 @@ class ImportadorTickets
             if ($campo === null) {
                 continue;
             }
-
             $valor = $celdas[$indice] ?? null;
             $resultado[$campo] = $this->convertir($campo, $valor);
         }
@@ -290,7 +302,6 @@ class ImportadorTickets
             return null;
         }
 
-        // openspout v5 convierte celdas con formato de fecha a DateTimeImmutable
         if ($valor instanceof \DateTimeInterface) {
             return $valor->format('Y-m-d');
         }
@@ -303,14 +314,11 @@ class ImportadorTickets
             return (int) $valor;
         }
 
-        // numeros largos (N° ORDEN, MDA) -> texto sin decimales
         if (is_float($valor) || is_int($valor)) {
             return (string) (int) $valor;
         }
 
         $texto = trim((string) $valor);
-
-        // celdas entre comillas dobles (\"Tarea Realizada...\")
         if (str_starts_with($texto, '"') && str_ends_with($texto, '"') && strlen($texto) > 1) {
             $texto = trim(substr($texto, 1, -1));
         }
@@ -318,12 +326,10 @@ class ImportadorTickets
         return $texto === '' ? null : $texto;
     }
 
-    /** Convierte numero serial de Excel (44938) o texto de fecha a Y-m-d. */
     private function aFecha(mixed $valor): ?string
     {
         if (is_numeric($valor)) {
             $serial = (float) $valor;
-            // rango razonable de fechas (1950..2100)
             if ($serial < 18000 || $serial > 73400) {
                 return null;
             }
@@ -340,11 +346,9 @@ class ImportadorTickets
 
     private function normalizar(string $texto): string
     {
-        // se quita el simbolo de grado ANTES de transliterar (iconv en Windows lo arruina)
         $texto = str_replace(['°', "\xc2\xb0"], '', $texto);
         $texto = mb_strtolower($texto, 'UTF-8');
 
-        // mapa manual de acentos (iconv //TRANSLIT en Windows da artefactos como "N^0", "A~no")
         $mapa = [
             'á' => 'a', 'à' => 'a', 'ä' => 'a', 'â' => 'a', 'ã' => 'a',
             'é' => 'e', 'è' => 'e', 'ë' => 'e', 'ê' => 'e',
@@ -364,7 +368,7 @@ class ImportadorTickets
     {
         foreach ($celdas as $celda) {
             if ($celda instanceof \DateTimeInterface) {
-                return false; // una fecha ya es contenido
+                return false;
             }
             if ($celda !== null && trim((string) $celda) !== '') {
                 return false;
