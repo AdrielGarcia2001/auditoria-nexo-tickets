@@ -9,10 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
-/**
- * Registro manual de tickets uno por uno (formulario).
- * Es el único medio permitido para cargar tickets nuevos individualmente.
- */
+/** Registro manual de tickets uno por uno (solo supervisores). */
 class TicketCrearController extends Controller
 {
     public function create()
@@ -23,12 +20,9 @@ class TicketCrearController extends Controller
             abort(403, 'Solo los supervisores pueden crear tickets.');
         }
 
-        $prioridades = array_keys(Ticket::PRIORIDAD_HORAS);
-        $tecnicos = $usuario->tecnicos();
-
         return view('tickets.crear', [
-            'prioridades' => $prioridades,
-            'tecnicos' => $tecnicos,
+            'prioridades' => array_keys(Ticket::PRIORIDAD_HORAS),
+            'tecnicos' => $usuario->tecnicos(),
         ]);
     }
 
@@ -69,34 +63,21 @@ class TicketCrearController extends Controller
             'numero_orden.required' => 'El N° de orden es obligatorio.',
             'ubicacion.required' => 'La ubicación es obligatoria.',
             'prioridad.required' => 'La prioridad es obligatoria.',
-            'clase_orden.required' => 'La clase de orden es obligatoria.',
-            'provincia_codigo.required' => 'La provincia es obligatoria.',
-            'provincia_nombre.required' => 'El nombre de provincia es obligatorio.',
         ]);
 
-        // provincia A36 => nombre
         $provinciaNombres = [
-            'A32' => 'CHACO',
-            'A33' => 'CORRIENTES',
-            'A34' => 'ENTRE RIOS',
-            'A35' => 'MISIONES',
-            'A36' => 'FORMOSA',
-            'A41' => 'CATAMARCA',
-            'A43' => 'JUJUY',
-            'A45' => 'RIOJA',
-            'A47' => 'SALTA',
-            'A48' => 'SANTIAGO DEL ESTERO',
+            'A32' => 'CHACO', 'A33' => 'CORRIENTES', 'A34' => 'ENTRE RIOS', 'A35' => 'MISIONES',
+            'A36' => 'FORMOSA', 'A41' => 'CATAMARCA', 'A43' => 'JUJUY', 'A45' => 'RIOJA',
+            'A47' => 'SALTA', 'A48' => 'SANTIAGO DEL ESTERO',
         ];
         if (! $datos['provincia_nombre']) {
             $datos['provincia_nombre'] = $provinciaNombres[$datos['provincia_codigo']] ?? strtoupper($datos['provincia_codigo']);
         }
 
         DB::transaction(function () use ($datos, $usuario) {
-            // FSMA = correctivo, FSMC = preventivo
             $tipo = $datos['clase_orden'] === 'FSMC' ? 'preventivo' : 'correctivo';
             unset($datos['clase_orden']);
 
-            // estado REALIZADO -> resuelto, otro -> nuevo
             $estadoExcel = strtoupper(trim((string) ($datos['estado'] ?? '')));
             if ($estadoExcel === 'REALIZADO') {
                 $datos['estado_workflow'] = Ticket::RESUELTO;
@@ -123,7 +104,6 @@ class TicketCrearController extends Controller
             ]);
         });
 
-        // buscar el ticket creado para redirigir por su ID real (implicit binding)
         $ticketCreado = Ticket::where('numero_orden', $datos['numero_orden'])->first();
 
         return redirect()->route('tickets.show', $ticketCreado?->id ?? $datos['numero_orden'])

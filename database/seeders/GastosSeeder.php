@@ -21,13 +21,9 @@ class GastosSeeder extends Seeder
 
         $guardados = [];
         foreach ($articulos as $a) {
-            $guardados[] = ArticuloInventario::updateOrCreate(
-                ['codigo' => $a['codigo']],
-                $a
-            );
+            $guardados[] = ArticuloInventario::updateOrCreate(['codigo' => $a['codigo']], $a);
         }
 
-        // ticket de ejemplo si no hay ninguno
         $ticket = Ticket::first();
         if (! $ticket) {
             $ticket = Ticket::create([

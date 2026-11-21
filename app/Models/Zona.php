@@ -12,9 +12,7 @@ class Zona extends Model
 {
     protected $table = 'zonas';
 
-    protected $casts = [
-        'activo' => 'boolean',
-    ];
+    protected $casts = ['activo' => 'boolean'];
 
     public function sitios(): HasMany
     {

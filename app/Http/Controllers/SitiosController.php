@@ -30,7 +30,6 @@ class SitiosController extends Controller
     {
         $usuario = auth()->user();
 
-        // supervisor solo puede ver sitios de sus zonas
         if ($usuario->isSupervisor() && ! $sitio->zona_id) {
             abort(403, 'Este sitio no tiene zona asignada.');
         }
@@ -59,7 +58,6 @@ class SitiosController extends Controller
 
         $ids = array_values(array_unique(array_map('intval', $datos['tecnicos'] ?? [])));
 
-        // sync en tecnicos_sitios
         $sitio->tecnicos()->sync(
             collect($ids)->mapWithKeys(fn ($id) => [$id => ['asignado_por' => $request->user()->id]])->all()
         );

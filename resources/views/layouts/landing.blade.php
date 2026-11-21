@@ -10,7 +10,6 @@
     <link rel="icon" type="image/svg+xml" href="/images/sigo-nexo-mark.svg">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <script>
-        // aplica el tema guardado antes del primer pintado (evita destello)
         (function () {
             var t = localStorage.getItem('sigo-tema') || 'oscuro';
             if (t === 'oscuro') document.documentElement.classList.add('dark');

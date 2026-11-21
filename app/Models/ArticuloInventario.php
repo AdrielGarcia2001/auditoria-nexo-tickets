@@ -20,9 +20,4 @@ class ArticuloInventario extends Model
     {
         return $this->hasMany(ConsumibleTicket::class, 'articulo_id');
     }
-
-    public function getSubtotalesAttribute(): float
-    {
-        return (float) $this->consumibles()->sum('cantidad_utilizada');
-    }
 }

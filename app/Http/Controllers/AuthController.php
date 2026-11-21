@@ -25,9 +25,7 @@ class AuthController extends Controller
         $usuario = User::where('email', $credenciales['email'])->first();
 
         if (! $usuario || ! Hash::check($credenciales['password'], $usuario->password)) {
-            throw ValidationException::withMessages([
-                'email' => 'Credenciales inválidas.',
-            ]);
+            throw ValidationException::withMessages(['email' => 'Credenciales inválidas.']);
         }
 
         if (! $usuario->activo) {
@@ -37,10 +35,8 @@ class AuthController extends Controller
         }
 
         Auth::login($usuario, $request->boolean('remember'));
-
         $request->session()->regenerate();
 
-        // Si nunca cambio la contraseña, obligar a hacerlo ahora
         if ($usuario->necesitaCambiarPassword()) {
             return redirect()->route('password.cambiar')
                 ->with('aviso', 'Por seguridad, debés cambiar tu contraseña antes de continuar.');

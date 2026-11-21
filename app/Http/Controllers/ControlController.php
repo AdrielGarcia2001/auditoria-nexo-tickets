@@ -7,22 +7,17 @@ use App\Models\User;
 use App\Models\Zona;
 use Illuminate\Http\Request;
 
-/**
- * Panel de CONTROL del administrador: estados y progreso de los tickets
- * cargados. Solo lectura (para supervisar, sin modificar).
- */
+/** Panel de CONTROL del administrador: estados y progreso de los tickets (solo lectura). */
 class ControlController extends Controller
 {
     public function __invoke(Request $request)
     {
-        // Solo administrador
         if (! $request->user()->isAdmin()) {
             abort(403, 'Este panel es solo para el administrador.');
         }
 
         $total = Ticket::count();
 
-        // Estados del workflow (con porcentaje)
         $porEstado = [
             Ticket::NUEVO => Ticket::where('estado_workflow', Ticket::NUEVO)->count(),
             Ticket::RESUELTO => Ticket::where('estado_workflow', Ticket::RESUELTO)->count(),
@@ -35,7 +30,6 @@ class ControlController extends Controller
             ];
         }
 
-        // Progreso por tipo (correctivo / preventivo)
         $porTipo = [
             'correctivo' => Ticket::where('tipo', 'correctivo')->count(),
             'preventivo' => Ticket::where('tipo', 'preventivo')->count(),
@@ -47,10 +41,7 @@ class ControlController extends Controller
             ];
         }
 
-        // Progreso por zona
-        $porZona = Zona::where('activo', true)
-            ->orderBy('nombre')
-            ->get()
+        $porZona = Zona::where('activo', true)->orderBy('nombre')->get()
             ->map(function ($zona) {
                 $cantidad = Ticket::whereHas('sitio', fn ($s) => $s->where('zona_id', $zona->id))->count();
                 return [
@@ -61,11 +52,7 @@ class ControlController extends Controller
                 ];
             });
 
-        // Progreso por supervisor (sus técnicos / zonas)
-        $porSupervisor = User::where('role', User::ROLE_SUPERVISOR)
-            ->where('activo', true)
-            ->orderBy('name')
-            ->get()
+        $porSupervisor = User::where('role', User::ROLE_SUPERVISOR)->where('activo', true)->orderBy('name')->get()
             ->map(function ($sup) {
                 $zonaIds = $sup->zonaIds();
                 return [
@@ -76,19 +63,11 @@ class ControlController extends Controller
                 ];
             });
 
-        // Tickets recientes con su estado (para control)
         $recientes = Ticket::with(['sitio', 'tecnicos'])
             ->latest('fecha_entrada')
             ->limit(15)
             ->get(['id', 'numero_orden', 'texto_breve', 'estado_workflow', 'prioridad', 'fecha_entrada', 'sitio_id']);
 
-        return view('control.index', compact(
-            'total',
-            'porEstado',
-            'porTipo',
-            'porZona',
-            'porSupervisor',
-            'recientes'
-        ));
+        return view('control.index', compact('total', 'porEstado', 'porTipo', 'porZona', 'porSupervisor', 'recientes'));
     }
 }

@@ -11,7 +11,6 @@ use Illuminate\Support\Str;
 
 /**
  * Panel del administrador: creación y gestión de cuentas de usuarios.
- *
  * - El administrador crea cuentas con contraseña aleatoria.
  * - El usuario debe cambiar su contraseña al primer login.
  */
@@ -19,13 +18,9 @@ class UsuariosController extends Controller
 {
     public function index()
     {
-        $usuarios = User::orderByDesc('role')
-            ->orderBy('name')
-            ->get();
+        $usuarios = User::orderByDesc('role')->orderBy('name')->get();
 
-        return view('usuarios.index', [
-            'usuarios' => $usuarios,
-        ]);
+        return view('usuarios.index', ['usuarios' => $usuarios]);
     }
 
     public function crear()
@@ -80,11 +75,9 @@ class UsuariosController extends Controller
             return back()->with('error', 'Solo se pueden asignar zonas a supervisores.');
         }
 
-        $zonas = Zona::orderBy('nombre')->get();
-
         return view('usuarios.zonas', [
             'supervisor' => $user,
-            'zonas' => $zonas,
+            'zonas' => Zona::orderBy('nombre')->get(),
             'zonasAsignadas' => $user->zonaIds(),
             'tecnicosAsignados' => $user->tecnicoIds(),
             'todosTecnicos' => User::where('role', User::ROLE_TECNICO)->where('activo', true)->orderBy('name')->get(),
@@ -107,23 +100,17 @@ class UsuariosController extends Controller
         $zonaIds = array_values(array_unique(array_map('intval', $datos['zonas'] ?? [])));
         $tecnicoIds = array_values(array_unique(array_map('intval', $datos['tecnicos'] ?? [])));
 
-        // sincronizar zonas
         $user->zonasAsignadas()->delete();
         foreach ($zonaIds as $zonaId) {
             SupervisorZona::create([
-                'supervisor_id' => $user->id,
-                'zona_id' => $zonaId,
-                'asignado_en' => now(),
+                'supervisor_id' => $user->id, 'zona_id' => $zonaId, 'asignado_en' => now(),
             ]);
         }
 
-        // sincronizar tecnicos
         $user->tecnicosAsignados()->delete();
         foreach ($tecnicoIds as $tecnicoId) {
             SupervisorTecnico::create([
-                'supervisor_id' => $user->id,
-                'tecnico_id' => $tecnicoId,
-                'asignado_en' => now(),
+                'supervisor_id' => $user->id, 'tecnico_id' => $tecnicoId, 'asignado_en' => now(),
             ]);
         }
 

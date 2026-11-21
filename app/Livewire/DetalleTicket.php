@@ -15,17 +15,13 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-/**
- * Ficha completa del ticket: campos exactos del Excel + workflow
- * (supervisor resuelve, admin cierra/reabre), asignacion, fotos y comentarios.
- */
+/** Ficha completa del ticket: campos del Excel + workflow + fotos + insumos. */
 class DetalleTicket extends Component
 {
     use WithFileUploads;
 
     public int $ticketId;
 
-    // ====== acciones ======
     public bool $mostrarResolver = false;
     public string $comentarioResolucion = '';
 
@@ -181,21 +177,15 @@ class DetalleTicket extends Component
         }
 
         try {
-            $this->validate([
-                'foto' => ['required', 'image', 'max:10240'],
-            ]);
+            $this->validate(['foto' => ['required', 'image', 'max:10240']]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->errorAccion = 'Elegí una foto válida (jpg/png, hasta 10 MB).';
-
             return;
         }
 
         $ticket = $this->ticket();
-
-        // comprimir la imagen antes de guardar (sin perder calidad apreciable)
         $rutaComprimida = $this->comprimirImagen($this->foto, 'fotos-tickets/'.$ticket->id);
 
-        // copia a Google Drive (si esta configurado)
         $urlDrive = app(GoogleDriveService::class)->subirFoto(
             $ticket,
             storage_path('app/'.$rutaComprimida),
@@ -234,7 +224,6 @@ class DetalleTicket extends Component
         $anchoOrigen = $info[0];
         $altoOrigen = $info[1];
 
-        // maximo 1920px en el lado mas largo
         $max = 1920;
         $ratio = $anchoOrigen / $altoOrigen;
         if ($anchoOrigen > $max || $altoOrigen > $max) {
@@ -275,7 +264,6 @@ class DetalleTicket extends Component
 
         imagedestroy($destino);
 
-        // devolver ruta relativa para storage
         return str_replace(storage_path('app/public/').'', '', $rutaGuardado);
     }
 

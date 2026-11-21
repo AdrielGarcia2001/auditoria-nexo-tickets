@@ -28,12 +28,10 @@ class Ticket extends Model
 {
     protected $table = 'tickets';
 
-    // ====== estados del workflow (sistema) ======
     public const NUEVO = 'nuevo';
     public const RESUELTO = 'resuelto';
     public const CERRADO = 'cerrado';
 
-    // ====== horas de SLA por prioridad (valores del Excel) ======
     public const PRIORIDAD_HORAS = [
         '24 horas' => 24,
         '48 horas' => 48,
@@ -41,7 +39,6 @@ class Ticket extends Model
         '7 Días' => 168,
         '15 Días' => 360,
         '30 Días' => 720,
-        // 'Programado Mensual' => sin SLA automatico (es un plan mensual)
     ];
 
     protected $casts = [
@@ -63,7 +60,6 @@ class Ticket extends Model
     protected static function booted(): void
     {
         static::creating(function (Ticket $t) {
-            // FSMA = correctivo, FSMC = preventivo
             if (! $t->tipo) {
                 $t->tipo = $t->clase_orden === 'FSMC' ? 'preventivo' : 'correctivo';
             }
@@ -108,10 +104,7 @@ class Ticket extends Model
             ->withTimestamps();
     }
 
-    /**
-     * Comentarios del sistema (usuarios). OJO: "comentarios" es tambien
-     * una columna del Excel (texto), por eso la relacion tiene otro nombre.
-     */
+    /** Comentarios del sistema (usuarios). */
     public function comentariosSistema(): HasMany
     {
         return $this->hasMany(TicketComentario::class)->orderByDesc('created_at');
@@ -122,11 +115,6 @@ class Ticket extends Model
         return $this->hasMany(TicketFoto::class);
     }
 
-    public function consumibles(): HasMany
-    {
-        return $this->hasMany(ConsumibleTicket::class);
-    }
-
     public function historial(): HasMany
     {
         return $this->hasMany(TicketHistorial::class)->orderByDesc('created_at');
@@ -135,6 +123,11 @@ class Ticket extends Model
     public function alertas(): HasMany
     {
         return $this->hasMany(AlertaSla::class);
+    }
+
+    public function consumibles(): HasMany
+    {
+        return $this->hasMany(ConsumibleTicket::class);
     }
 
     // ====== workflow ======
@@ -154,27 +147,23 @@ class Ticket extends Model
         return $this->estado_workflow === self::CERRADO;
     }
 
-    /** Supervisor: Nuevo -> Resuelto (solo si esta Nuevo). */
     public function puedeResolverse(): bool
     {
         return $this->esNuevo();
     }
 
-    /** Admin: Resuelto -> Cerrado. */
     public function puedeCerrarse(): bool
     {
         return $this->esResuelto();
     }
 
-    /** Admin: Resuelto -> Nuevo (reabrir, puede cambiar preventivo a correctivo). */
     public function puedeReabrirse(): bool
     {
         return $this->esResuelto();
     }
 
-    // ====== area del ticket (limpieza vs mantenimiento) ======
+    // ====== area del ticket ======
 
-    /** Limpieza: hoja LIMP o grupo planificador M02. */
     public function area(): string
     {
         if ($this->origen_hoja === 'LIMP (M01PR012)' || $this->grupo_planificador === 'M02') {
@@ -184,7 +173,6 @@ class Ticket extends Model
         return 'mantenimiento';
     }
 
-    /** Limpieza: 1 tecnico | mantenimiento: hasta 2. */
     public function limiteTecnicos(): int
     {
         return $this->area() === 'limpieza' ? 1 : 2;
@@ -215,10 +203,7 @@ class Ticket extends Model
         $this->sla_vencimiento = $this->fecha_entrada->copy()->addHours($horas)->endOfDay();
     }
 
-    /**
-     * Horas de SLA efectivas para este ticket:
-     * 1) contrato activo del sitio (si aplica), 2) default del sistema.
-     */
+    /** Horas de SLA efectivas: contrato activo del sitio (null = sin SLA) o default. */
     public function horasSlaParaTicket(): ?int
     {
         if ($this->sitio_id) {
@@ -226,7 +211,6 @@ class Ticket extends Model
                 ->where('activo', true)
                 ->first();
 
-            // si hay contrato activo, manda lo que diga (null = prioridad sin SLA)
             if ($contrato) {
                 return $contrato->horasPara($this->prioridad);
             }
@@ -242,7 +226,6 @@ class Ticket extends Model
             && ! $this->esCerrado();
     }
 
-    /** Vence en menos de 24 horas (y aun no vencio). */
     public function slaPorVencer(): bool
     {
         return $this->sla_vencimiento !== null
@@ -266,9 +249,7 @@ class Ticket extends Model
 
     /**
      * Filtra tickets según el rol del usuario (única fuente de verdad).
-     * - Admin: ve todos.
-     * - Supervisor: solo tickets de sus zonas.
-     * - Técnico: solo sus tickets asignados.
+     * Admin: todos | Supervisor: sus zonas | Técnico: sus tickets.
      */
     public function scopePorRol(Builder $q, User $user): Builder
     {

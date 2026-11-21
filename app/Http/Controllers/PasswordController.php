@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
-/**
- * Cambio obligatorio de contraseña al primer login.
- */
+/** Cambio obligatorio de contraseña al primer login. */
 class PasswordController extends Controller
 {
     public function showCambiar(Request $request)
@@ -37,7 +34,6 @@ class PasswordController extends Controller
             'password' => ['required', 'confirmed', 'min:8', 'different:password_actual'],
         ], [
             'password_actual.required' => 'Ingresá tu contraseña actual.',
-            'password.required' => 'Ingresá la nueva contraseña.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
             'password.different' => 'La nueva contraseña no puede ser igual a la actual.',

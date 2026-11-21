@@ -28,9 +28,7 @@
                 <span id="icono-tema">🌙</span>
             </button>
             @auth
-                <a href="{{ route('dashboard') }}" class="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500">
-                    Ir al Dashboard →
-                </a>
+                <a href="{{ route('dashboard') }}" class="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500">Ir al Dashboard →</a>
             @else
                 <a href="{{ route('login') }}" class="hidden rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5 sm:block">Iniciar sesión</a>
             @endauth
@@ -42,10 +40,8 @@
      HERO
 ============================================================ --}}
 <section id="inicio" class="relative overflow-hidden bg-slate-50 dark:bg-night-900">
-    <!-- cuadrícula técnica -->
     <div class="pointer-events-none absolute inset-0 opacity-[0.35] dark:opacity-[0.18]"
          style="background-image:linear-gradient(rgba(148,163,184,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.28) 1px,transparent 1px);background-size:44px 44px;"></div>
-    <!-- orbes -->
     <div class="pointer-events-none absolute -left-40 top-10 h-[26rem] w-[26rem] rounded-full bg-cyan-300/30 blur-3xl dark:bg-cyan-500/10"></div>
     <div class="pointer-events-none absolute -right-40 bottom-0 h-[24rem] w-[24rem] rounded-full bg-blue-300/30 blur-3xl dark:bg-blue-600/10"></div>
     <div class="pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 -translate-x-1/2 rounded-full border border-cyan-300/30 dark:border-cyan-500/10"></div>
@@ -88,30 +84,25 @@
             </dl>
         </div>
 
-        {{-- ============ SIMULADOR SIGO-NEXO (Alpine.js) ============ --}}
+        {{-- SIMULADOR SIGO-NEXO (Alpine.js) --}}
         <div x-data="simuladorSigo()" x-init="iniciar()" class="relative">
             <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-300/40 dark:border-white/10 dark:bg-night-800 dark:shadow-black/40 sm:p-5">
-
-                <!-- barra superior: 4 pasos + progreso -->
                 <div class="mb-3 grid grid-cols-4 gap-1.5">
                     <template x-for="(etapa, i) in etapas" :key="etapa.codigo">
                         <button type="button" @click="irA(i)"
-                                class="rounded-lg border px-1 py-2 text-left transition sm:text-center"
-                                :class="actual === i
-                                    ? 'border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:border-cyan-400 dark:text-cyan-300'
-                                    : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5'">
+                                class="rounded-lg border px-1 py-2 text-center transition"
+                                :class="actual === i ? 'border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:border-cyan-400 dark:text-cyan-300' : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5'">
                             <span class="block font-mono text-[10px] font-bold" x-text="etapa.codigo"></span>
                             <span class="block text-[10px] font-bold sm:text-xs" x-text="etapa.titulo"></span>
                         </button>
                     </template>
                 </div>
                 <div class="mb-4 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
-                    <div class="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-100"
-                         :style="`width:${pctGlobal}%`"></div>
+                    <div class="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-100" :style="`width:${pctGlobal}%`"></div>
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-2">
-                    <!-- PANEL IZQUIERDO: MAPA GPS -->
+                    {{-- PANEL IZQUIERDO: MAPA GPS --}}
                     <div class="relative overflow-hidden rounded-xl border border-slate-700 bg-night-900 ring-1 ring-white/5">
                         <svg viewBox="0 0 400 300" class="h-full w-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                             <defs>
@@ -121,31 +112,19 @@
                             </defs>
                             <rect width="400" height="300" fill="#070b14"/>
                             <rect width="400" height="300" fill="url(#radar)"/>
-                            <g stroke="#1e3a5f" stroke-width="2" fill="none" opacity=".9">
-                                <path d="M-10 250 C80 210 120 160 190 150 C260 140 300 90 410 60"/>
-                            </g>
-                            <g stroke="#0f2c4d" stroke-width="6" fill="none" opacity=".5">
-                                <path d="M-10 250 C80 210 120 160 190 150 C260 140 300 90 410 60"/>
-                            </g>
-                            <!-- ruta activa -->
-                            <path d="M-10 250 C80 210 120 160 190 150 C260 140 300 90 410 60" fill="none"
-                                  stroke="#22d3ee" stroke-width="2.5" stroke-dasharray="6 6" opacity=".9"/>
-                            <!-- nodo objetivo -->
+                            <g stroke="#1e3a5f" stroke-width="2" fill="none" opacity=".9"><path d="M-10 250 C80 210 120 160 190 150 C260 140 300 90 410 60"/></g>
+                            <g stroke="#0f2c4d" stroke-width="6" fill="none" opacity=".5"><path d="M-10 250 C80 210 120 160 190 150 C260 140 300 90 410 60"/></g>
+                            <path d="M-10 250 C80 210 120 160 190 150 C260 140 300 90 410 60" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-dasharray="6 6" opacity=".9"/>
                             <g transform="translate(300 90)">
                                 <circle r="20" fill="#22d3ee" opacity=".15"><animate attributeName="r" values="16;24;16" dur="2s" repeatCount="indefinite"/></circle>
-                                <circle r="8" fill="#06b6d4"/>
-                                <circle r="3" fill="#fff"/>
+                                <circle r="8" fill="#06b6d4"/><circle r="3" fill="#fff"/>
                             </g>
-                            <!-- edificios -->
                             <g fill="#0f172a" stroke="#1e293b">
                                 <rect x="40" y="60" width="52" height="38" rx="3"/><rect x="100" y="180" width="44" height="52" rx="3"/>
                                 <rect x="230" y="190" width="56" height="40" rx="3"/><rect x="330" y="180" width="48" height="60" rx="3"/>
                             </g>
-                            <!-- marcador cuadrilla -->
                             <g :style="`transform:translate(${xMarcador}px, ${yMarcador}px)`" style="transition:transform .12s linear">
-                                <circle r="14" fill="#22d3ee" opacity=".25"/>
-                                <circle r="8" fill="#22d3ee"/>
-                                <circle r="3" fill="#070b14"/>
+                                <circle r="14" fill="#22d3ee" opacity=".25"/><circle r="8" fill="#22d3ee"/><circle r="3" fill="#070b14"/>
                                 <text x="12" y="4" font-size="9" font-weight="700" fill="#67e8f9" font-family="monospace">CUADRILLA</text>
                             </g>
                         </svg>
@@ -161,7 +140,7 @@
                         </div>
                     </div>
 
-                    <!-- PANEL DERECHO: ORDEN DE SERVICIO -->
+                    {{-- PANEL DERECHO: ORDEN DE SERVICIO --}}
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-night-700/60">
                         <div class="flex items-start justify-between gap-2">
                             <div>
@@ -199,20 +178,16 @@
 
                         <div class="mt-4 flex items-center justify-between rounded-lg border border-dashed px-3 py-2"
                              :class="actual >= 3 ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-slate-300 dark:border-white/15'">
-                            <span class="text-[10px] font-bold" :class="actual >= 3 ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'">
-                                Auditoría Aprobada · Evidencia Inmutable
-                            </span>
+                            <span class="text-[10px] font-bold" :class="actual >= 3 ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'">Auditoría Aprobada · Evidencia Inmutable</span>
                             <span class="font-mono text-[10px] font-bold" :class="actual >= 3 ? 'text-emerald-500' : 'text-slate-300 dark:text-slate-600'">#8F9C2A</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- controles -->
                 <div class="mt-4 flex items-center gap-3">
                     <button type="button" @click="toggle()" :aria-label="jugando ? 'Pausar' : 'Reanudar'"
                             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white hover:bg-slate-700 dark:bg-cyan-600 dark:hover:bg-cyan-500">
-                        <span x-show="!jugando">▶</span>
-                        <span x-show="jugando" x-cloak>❚❚</span>
+                        <span x-show="!jugando">▶</span><span x-show="jugando" x-cloak>❚❚</span>
                     </button>
                     <button type="button" @click="reiniciar()" aria-label="Reiniciar"
                             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5">↺</button>
@@ -242,8 +217,7 @@
             @endphp
             @foreach ($pilares as [$icono, $titulo, $texto, $acento])
                 <div class="group rounded-2xl border border-slate-200 bg-slate-50 p-7 transition hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-night-700/60 dark:hover:border-cyan-500/30">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl text-2xl
-                                {{ $acento === 'cyan' ? 'bg-cyan-500/10' : ($acento === 'emerald' ? 'bg-emerald-500/10' : 'bg-blue-500/10') }}">{{ $icono }}</div>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl text-2xl {{ $acento === 'cyan' ? 'bg-cyan-500/10' : ($acento === 'emerald' ? 'bg-emerald-500/10' : 'bg-blue-500/10') }}">{{ $icono }}</div>
                     <h3 class="mt-5 text-lg font-bold text-slate-900 dark:text-white">{{ $titulo }}</h3>
                     <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ $texto }}</p>
                 </div>
@@ -270,12 +244,9 @@
                 <template x-for="(item, i) in pasos" :key="item.titulo">
                     <button type="button" @click="paso = i"
                             class="flex w-full items-center gap-4 rounded-xl border p-4 text-left transition"
-                            :class="paso === i
-                                ? 'border-cyan-500 bg-cyan-500/10 dark:border-cyan-400 dark:bg-cyan-500/10'
-                                : 'border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-night-700/50 dark:hover:border-cyan-500/30'">
+                            :class="paso === i ? 'border-cyan-500 bg-cyan-500/10 dark:border-cyan-400 dark:bg-cyan-500/10' : 'border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-night-700/50 dark:hover:border-cyan-500/30'">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-sm font-bold"
-                              :class="paso === i ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400'"
-                              x-text="i + 1"></span>
+                              :class="paso === i ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400'" x-text="i + 1"></span>
                         <span>
                             <span class="block text-sm font-bold text-slate-800 dark:text-white" x-text="item.titulo"></span>
                             <span class="block text-xs text-slate-500 dark:text-slate-400" x-text="item.resumen"></span>
@@ -292,9 +263,7 @@
                         <p class="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300" x-text="item.detalle"></p>
                         <ul class="mt-5 space-y-2">
                             <template x-for="b in item.bullets" :key="b">
-                                <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                    <span class="font-bold text-emerald-500">✓</span><span x-text="b"></span>
-                                </li>
+                                <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><span class="font-bold text-emerald-500">✓</span><span x-text="b"></span></li>
                             </template>
                         </ul>
                     </div>
@@ -334,21 +303,14 @@ function alternarTema() {
 function simuladorSigo() {
     return {
         etapas: [
-            { codigo: '01', titulo: 'TICKET' },
-            { codigo: '02', titulo: 'DESPACHO' },
-            { codigo: '03', titulo: 'CAMPO' },
-            { codigo: '04', titulo: 'AUDITORÍA' },
+            { codigo: '01', titulo: 'TICKET' }, { codigo: '02', titulo: 'DESPACHO' },
+            { codigo: '03', titulo: 'CAMPO' }, { codigo: '04', titulo: 'AUDITORÍA' },
         ],
         protocolo: [
-            'Check-in GPS en sitio',
-            'Foto antes / después (EXIF)',
-            'Medición potencia óptica',
-            'Firma digital & Hash cierre',
+            'Check-in GPS en sitio', 'Foto antes / después (EXIF)',
+            'Medición potencia óptica', 'Firma digital & Hash cierre',
         ],
-        actual: 0,
-        progreso: 0,
-        jugando: true,
-        timer: null,
+        actual: 0, progreso: 0, jugando: true, timer: null,
         get pctGlobal() { return Math.min(100, ((this.actual * 100) + this.progreso) / 4); },
         get itemsValidados() { return Math.min(4, Math.floor(this.pctGlobal / 25)); },
         get slaRestante() {
@@ -366,24 +328,13 @@ function simuladorSigo() {
                 3: 'Ticket #TK-8492 cerrado y auditado dentro de SLA',
             }[this.actual];
         },
-        // ruta paramétrica (aprox. del path SVG)
         get xMarcador() { const p = this.actual === 0 ? 0 : (this.actual === 1 ? this.progreso : 100); return -10 + p * 3.1; },
-        get yMarcador() {
-            const p = this.actual === 0 ? 0 : (this.actual === 1 ? this.progreso : 100);
-            const t = p / 100;
-            return 250 - 190 * t + 0 * t * t;
-        },
-        iniciar() {
-            const self = this;
-            this.timer = setInterval(() => self.tick(), 70);
-        },
+        get yMarcador() { const p = this.actual === 0 ? 0 : (this.actual === 1 ? this.progreso : 100); const t = p / 100; return 250 - 190 * t; },
+        iniciar() { const self = this; this.timer = setInterval(() => self.tick(), 70); },
         tick() {
             if (!this.jugando) return;
             this.progreso += 1;
-            if (this.progreso >= 100) {
-                this.progreso = 0;
-                this.actual = (this.actual + 1) % 4;
-            }
+            if (this.progreso >= 100) { this.progreso = 0; this.actual = (this.actual + 1) % 4; }
         },
         toggle() { this.jugando = !this.jugando; },
         reiniciar() { this.actual = 0; this.progreso = 0; this.jugando = true; },
@@ -412,7 +363,6 @@ function flujoSigo() {
 }
 </script>
 <script>
-    // sincroniza el ícono del tema al cargar
     document.addEventListener('DOMContentLoaded', function () {
         const oscuro = document.documentElement.classList.contains('dark');
         const el = document.getElementById('icono-tema');

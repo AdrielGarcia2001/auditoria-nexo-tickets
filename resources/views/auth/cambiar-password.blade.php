@@ -30,12 +30,18 @@
                 <label for="password_actual" class="mb-1 block text-sm font-medium text-slate-700">Contraseña actual</label>
                 <input id="password_actual" type="password" name="password_actual" required
                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200">
+                @error('password_actual')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label for="password" class="mb-1 block text-sm font-medium text-slate-700">Nueva contraseña</label>
                 <input id="password" type="password" name="password" required
                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200">
+                @error('password')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -49,9 +55,7 @@
             </button>
         </form>
 
-        <p class="mt-4 text-center text-xs text-slate-500">
-            ¿Problemas? Contactá al administrador del sistema.
-        </p>
+        <p class="mt-4 text-center text-xs text-slate-500">¿Problemas? Contactá al administrador del sistema.</p>
     </div>
 </body>
 </html>

@@ -5,10 +5,7 @@ namespace App\Livewire;
 use App\Models\DemoSolicitud;
 use Livewire\Component;
 
-/**
- * Formulario público de solicitud de demo de SIGO-NEXO.
- * Validación en tiempo real, estado de carga y confirmación.
- */
+/** Formulario público de solicitud de demo de SIGO-NEXO. */
 class SolicitarDemo extends Component
 {
     public string $nombre = '';

@@ -49,8 +49,7 @@
 
         <div class="mx-auto flex w-full max-w-7xl flex-1 gap-0 px-0 sm:px-6">
             {{-- menu lateral --}}
-            <aside id="menu-lateral"
-                   class="hidden w-56 shrink-0 border-r border-slate-200 bg-white p-4 lg:block">
+            <aside id="menu-lateral" class="hidden w-56 shrink-0 border-r border-slate-200 bg-white p-4 lg:block">
                 @include('partials.nav')
             </aside>
 
@@ -79,7 +78,6 @@
     @livewireScripts
     @stack('scripts')
     <script>
-        // registra el service worker de la PWA (offline + background sync)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('SW no registrado', e));

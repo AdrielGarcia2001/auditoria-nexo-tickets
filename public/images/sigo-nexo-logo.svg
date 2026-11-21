@@ -17,11 +17,8 @@
       <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
     </linearGradient>
   </defs>
-
-  <!-- marca -->
   <g transform="translate(8 22) scale(1.12)">
-    <ellipse cx="60" cy="64" rx="52" ry="25" fill="none" stroke="url(#orbit2)" stroke-width="5"
-             transform="rotate(-22 60 64)" stroke-linecap="round"/>
+    <ellipse cx="60" cy="64" rx="52" ry="25" fill="none" stroke="url(#orbit2)" stroke-width="5" transform="rotate(-22 60 64)" stroke-linecap="round"/>
     <path d="M28 90 V30 h14 l26 32 V30 h14 v60 H68 L42 58 v32z" fill="url(#n2)"/>
     <g transform="translate(60 49)">
       <g fill="#0b2f6b">
@@ -40,22 +37,12 @@
             fill="none" stroke="#1e40af" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
   </g>
-
-  <!-- separador -->
   <rect x="150" y="34" width="3" height="122" rx="1.5" fill="#94a3b8"/>
-
-  <!-- palabra -->
-  <text x="178" y="88" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="56" font-weight="800"
-        letter-spacing="-0.5">
+  <text x="178" y="88" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="56" font-weight="800" letter-spacing="-0.5">
     <tspan fill="#0b2f6b">SIGO</tspan><tspan fill="#0b2f6b">-</tspan><tspan fill="url(#texto)">NEX</tspan>
   </text>
-  <!-- "O" con check -->
   <circle cx="524" cy="72" r="24" fill="none" stroke="url(#texto)" stroke-width="7"/>
-  <path d="M513 72 l8 8 15 -17" fill="none" stroke="#1d4ed8" stroke-width="6"
-        stroke-linecap="round" stroke-linejoin="round"/>
-
-  <!-- subtítulo -->
-  <text x="180" y="124" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="600"
-        letter-spacing="1.6" fill="#334155">SISTEMA INTEGRADO DE GESTIÓN OPERATIVA</text>
+  <path d="M513 72 l8 8 15 -17" fill="none" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="124" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="600" letter-spacing="1.6" fill="#334155">SISTEMA INTEGRADO DE GESTIÓN OPERATIVA</text>
   <rect x="180" y="136" width="415" height="3" rx="1.5" fill="url(#linea)"/>
 </svg>

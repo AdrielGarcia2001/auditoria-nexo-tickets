@@ -31,7 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/tickets-exportar', ExportarTicketsController::class)->name('tickets.exportar');
     Route::view('/tickets', 'tickets.index')->name('tickets.index');
 
-    // ====== crear ticket manual (formulario) ======
+    // ====== crear ticket manual (formulario, solo supervisores) ======
     Route::get('/tickets/crear', [TicketCrearController::class, 'create'])->name('tickets.crear');
     Route::post('/tickets/crear', [TicketCrearController::class, 'store'])->name('tickets.crear.store');
 

@@ -55,11 +55,10 @@
         </form>
 
         <p class="mt-4 text-center text-xs text-slate-500">
-            ¿Problemas para entrar? Contactá al administrador del sistema.
-        </p>
-
-        <p class="mt-4 text-center text-xs text-slate-500">
             Si no tenés cuenta, contactá al administrador del sistema.
+        </p>
+        <p class="mt-3 text-center text-xs text-slate-500">
+            <a href="{{ route('landing') }}" class="hover:underline">← Volver al inicio</a>
         </p>
     </div>
 </body>

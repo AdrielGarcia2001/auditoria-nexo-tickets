@@ -34,7 +34,6 @@ class ContratoSla extends Model
             return null;
         }
 
-        // contrato sin configuración guardada: usa el default del sistema
         if (! is_array($this->horas_por_prioridad)) {
             return Ticket::horasParaPrioridad($prioridad);
         }

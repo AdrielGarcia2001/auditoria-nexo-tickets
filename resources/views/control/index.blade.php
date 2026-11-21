@@ -5,36 +5,26 @@
 @section('content')
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-900">🎛️ Panel de control</h1>
-        <p class="text-sm text-slate-500">
-            Estado y progreso de los tickets cargados. Solo lectura, para control del administrador.
-        </p>
+        <p class="text-sm text-slate-500">Estado y progreso de los tickets cargados. Solo lectura, para control del administrador.</p>
     </div>
 
-    {{-- RESUMEN --}}
     <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <div class="text-sm text-slate-500">Total de tickets cargados</div>
         <div class="mt-1 text-4xl font-bold text-slate-900">{{ number_format($total, 0, ',', '.') }}</div>
     </div>
 
-    {{-- ESTADOS (con barritas de progreso) --}}
     <div class="mt-5 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <h2 class="font-semibold text-slate-900">📊 Estados de los tickets</h2>
         <div class="mt-4 space-y-3">
             @foreach ($porEstado as $estado => $datos)
                 @php
-                    $colores = [
-                        \App\Models\Ticket::NUEVO => 'bg-blue-500',
-                        \App\Models\Ticket::RESUELTO => 'bg-amber-500',
-                        \App\Models\Ticket::CERRADO => 'bg-emerald-500',
-                    ];
+                    $colores = [\App\Models\Ticket::NUEVO => 'bg-blue-500', \App\Models\Ticket::RESUELTO => 'bg-amber-500', \App\Models\Ticket::CERRADO => 'bg-emerald-500'];
                     $color = $colores[$estado] ?? 'bg-slate-500';
                 @endphp
                 <div>
                     <div class="flex items-center justify-between text-sm">
                         <span class="font-medium capitalize text-slate-700">{{ $estado }}</span>
-                        <span class="text-slate-500">
-                            {{ number_format($datos['cantidad'], 0, ',', '.') }} · {{ $datos['porcentaje'] }}%
-                        </span>
+                        <span class="text-slate-500">{{ number_format($datos['cantidad'], 0, ',', '.') }} · {{ $datos['porcentaje'] }}%</span>
                     </div>
                     <div class="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
                         <div class="h-full rounded-full {{ $color }}" style="width: {{ $datos['porcentaje'] }}%"></div>
@@ -45,7 +35,6 @@
     </div>
 
     <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {{-- TIPO --}}
         <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <h2 class="font-semibold text-slate-900">🔧 Por tipo de orden</h2>
             <div class="mt-4 space-y-3">
@@ -63,18 +52,12 @@
             </div>
         </div>
 
-        {{-- POR ZONA --}}
         <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <h2 class="font-semibold text-slate-900">🗺️ Progreso por zona</h2>
             <div class="mt-3 overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="text-xs uppercase text-slate-400">
-                        <tr>
-                            <th class="py-2 text-left">Zona</th>
-                            <th class="py-2 text-right">Tickets</th>
-                            <th class="py-2 text-right">Cerrados</th>
-                            <th class="py-2 text-right">Progreso</th>
-                        </tr>
+                        <tr><th class="py-2 text-left">Zona</th><th class="py-2 text-right">Tickets</th><th class="py-2 text-right">Cerrados</th><th class="py-2 text-right">Progreso</th></tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($porZona as $zona)
@@ -94,18 +77,12 @@
         </div>
     </div>
 
-    {{-- POR SUPERVISOR --}}
     <div class="mt-5 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <h2 class="font-semibold text-slate-900">👔 Control por supervisor</h2>
         <div class="mt-3 overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="text-xs uppercase text-slate-400">
-                    <tr>
-                        <th class="py-2 text-left">Supervisor</th>
-                        <th class="py-2 text-right">Técnicos</th>
-                        <th class="py-2 text-right">Zonas</th>
-                        <th class="py-2 text-right">Tickets</th>
-                    </tr>
+                    <tr><th class="py-2 text-left">Supervisor</th><th class="py-2 text-right">Técnicos</th><th class="py-2 text-right">Zonas</th><th class="py-2 text-right">Tickets</th></tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($porSupervisor as $sup)
@@ -123,7 +100,6 @@
         </div>
     </div>
 
-    {{-- TICKETS RECIENTES --}}
     <div class="mt-5 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <div class="border-b border-slate-100 px-5 py-4">
             <h2 class="font-semibold text-slate-900">🕘 Últimos tickets cargados</h2>
@@ -132,14 +108,7 @@
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
-                    <tr>
-                        <th class="px-4 py-3">N° Orden</th>
-                        <th class="px-4 py-3">Asunto</th>
-                        <th class="px-4 py-3">Sitio</th>
-                        <th class="px-4 py-3">Estado</th>
-                        <th class="px-4 py-3">Prioridad</th>
-                        <th class="px-4 py-3"></th>
-                    </tr>
+                    <tr><th class="px-4 py-3">N° Orden</th><th class="px-4 py-3">Asunto</th><th class="px-4 py-3">Sitio</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Prioridad</th><th class="px-4 py-3"></th></tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($recientes as $ticket)
@@ -149,9 +118,7 @@
                             <td class="px-4 py-3 text-slate-500">{{ $ticket->sitio?->nombre ?? '—' }}</td>
                             <td class="px-4 py-3">@include('partials.badge-estado', ['estado' => $ticket->estado_workflow])</td>
                             <td class="px-4 py-3 text-xs text-slate-500">{{ $ticket->prioridad }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right">
-                                <a href="{{ route('tickets.show', $ticket) }}" class="text-xs font-semibold text-blue-600 hover:underline">Ver</a>
-                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right"><a href="{{ route('tickets.show', $ticket) }}" class="text-xs font-semibold text-blue-600 hover:underline">Ver</a></td>
                         </tr>
                     @empty
                         <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">No hay tickets todavía.</td></tr>

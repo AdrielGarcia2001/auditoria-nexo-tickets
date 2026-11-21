@@ -1,9 +1,6 @@
 import Chart from 'chart.js/auto';
 
-/**
- * Gráficos del panel de control de gasto: se puede elegir entre
- * torta (doughnut) y barras. Los datos vienen de <script id="datos-gastos">.
- */
+/** Gráficos del panel de gasto: torta (donut) / barras. El modo lineal es HTML puro. */
 function inicializarGraficosGastos() {
     const tag = document.getElementById('datos-gastos');
     if (!tag) return;
@@ -21,18 +18,15 @@ function inicializarGraficosGastos() {
         '#16a34a', '#d97706', '#dc2626', '#0d9488', '#4f46e5',
     ];
 
-    // tipo elegido (torta por defecto)
     const selector = document.getElementById('tipo-grafico');
     const tipo = selector ? selector.value : 'torta';
 
-    // mostrar/ocultar contenedores según el tipo
     const contChart = document.getElementById('grafico-chart');
     const contLineal = document.getElementById('grafico-lineal');
     if (contChart) contChart.style.display = tipo === 'lineal' ? 'none' : '';
     if (contLineal) contLineal.style.display = tipo === 'lineal' ? '' : 'none';
 
     if (tipo === 'lineal') {
-        // las barras horizontales son HTML puro, no necesitan Chart.js
         if (window.__chartsGastosInstancias) {
             window.__chartsGastosInstancias.forEach((ch) => ch.destroy());
         }
@@ -42,7 +36,6 @@ function inicializarGraficosGastos() {
 
     const tipoChart = tipo === 'barra' ? 'bar' : 'doughnut';
 
-    // destruir instancias previas (Livewire puede re-disparar la inicialización)
     if (window.__chartsGastosInstancias) {
         window.__chartsGastosInstancias.forEach((ch) => ch.destroy());
     }
@@ -75,12 +68,7 @@ function inicializarGraficosGastos() {
                     legend: {
                         display: esTorta,
                         position: 'bottom',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 14,
-                            usePointStyle: true,
-                            font: { size: 11 },
-                        },
+                        labels: { boxWidth: 12, padding: 14, usePointStyle: true, font: { size: 11 } },
                     },
                     tooltip: {
                         callbacks: {
@@ -95,16 +83,12 @@ function inicializarGraficosGastos() {
             },
         };
 
-        // escalas solo para barras
         if (!esTorta) {
             configuracion.options.scales = {
                 x: { grid: { display: false }, ticks: { font: { size: 10 } } },
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        callback: (v) => '$' + Number(v).toLocaleString('es-AR'),
-                        font: { size: 10 },
-                    },
+                    ticks: { callback: (v) => '$' + Number(v).toLocaleString('es-AR'), font: { size: 10 } },
                 },
             };
         }
@@ -127,7 +111,7 @@ function alCambiarTipo() {
     inicializarGraficosGastos();
 }
 
-/** Cambia entre torta y barras (llamado desde los botones de la vista). */
+/** Cambia entre torta, barras y lineal (llamado desde los botones de la vista). */
 window.cambiarTipoGrafico = (tipo) => {
     const selector = document.getElementById('tipo-grafico');
     if (selector) {
@@ -145,7 +129,6 @@ window.cambiarTipoGrafico = (tipo) => {
     });
 };
 
-// inicializar al cargar el DOM
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         inicializarGraficosGastos();

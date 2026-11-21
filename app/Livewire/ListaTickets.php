@@ -3,26 +3,21 @@
 namespace App\Livewire;
 
 use App\Models\Ticket;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-/**
- * Listado de tickets con filtros (estado, prioridad, busqueda, tecnico).
- * - Admin/supervisor: ven todos.
- * - Tecnico: solo sus tickets asignados.
- */
+/** Listado de tickets con filtros. El filtro por rol vive en Ticket::porRol(). */
 class ListaTickets extends Component
 {
     use WithPagination;
 
     public string $busqueda = '';
-    public string $filtroEstado = '';      // nuevo | resuelto | cerrado
+    public string $filtroEstado = '';
     public string $filtroPrioridad = '';
-    public string $filtroArea = '';        // limpieza | mantenimiento
-    public string $filtroSla = '';         // '' | por_vencer | vencido
-    public string $orden = 'fecha_entrada'; // fecha_entrada | sla_vencimiento | prioridad
+    public string $filtroArea = '';
+    public string $filtroSla = '';
+    public string $orden = 'fecha_entrada';
 
     protected $queryString = [
         'busqueda' => ['except' => ''],

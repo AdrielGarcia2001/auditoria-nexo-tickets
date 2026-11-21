@@ -1,8 +1,5 @@
 <div class="space-y-4">
-
-    {{-- ============================================================
-         CABECERA
-    ============================================================ --}}
+    {{-- CABECERA --}}
     <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -14,30 +11,24 @@
                     @endif
                 </h1>
                 <p class="text-sm text-slate-600">{{ $ticket->texto_breve }}</p>
-                <p class="text-xs text-slate-400">
-                    {{ $ticket->ubicacion }} · {{ $ticket->calle }} · {{ $ticket->provincia_nombre }}
-                </p>
+                <p class="text-xs text-slate-400">{{ $ticket->ubicacion }} · {{ $ticket->calle }} · {{ $ticket->provincia_nombre }}</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 text-xs">
                 @include('partials.badge-estado', ['estado' => $ticket->estado_workflow])
-                <span class="rounded-full px-2 py-0.5 font-semibold ring-1 {{ $ticket->tipo === 'preventivo' ? 'bg-blue-100 text-blue-700 ring-blue-200' : 'bg-orange-100 text-orange-700 ring-orange-200' }}">
-                    {{ $ticket->tipo }}
-                </span>
+                <span class="rounded-full px-2 py-0.5 font-semibold ring-1 {{ $ticket->tipo === 'preventivo' ? 'bg-blue-100 text-blue-700 ring-blue-200' : 'bg-orange-100 text-orange-700 ring-orange-200' }}">{{ $ticket->tipo }}</span>
                 @include('partials.badge-prioridad', ['prioridad' => $ticket->prioridad])
-
                 @if ($ticket->sla_vencimiento)
                     <span class="rounded-full px-2 py-0.5 font-semibold ring-1
-                        {{ $ticket->slaVencido() ? 'bg-red-100 text-red-700 ring-red-200'
-                           : ($ticket->slaPorVencer() ? 'bg-amber-100 text-amber-700 ring-amber-200'
-                           : 'bg-slate-100 text-slate-600 ring-slate-200') }}">
+                        {{ $ticket->slaVencido() ? 'bg-red-100 text-red-700 ring-red-200' : ($ticket->slaPorVencer() ? 'bg-amber-100 text-amber-700 ring-amber-200' : 'bg-slate-100 text-slate-600 ring-slate-200') }}">
                         SLA {{ $ticket->slaVencido() ? 'vencido' : $ticket->sla_vencimiento->format('d/m/Y H:i') }}
                     </span>
+                @else
+                    <span class="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-500 ring-1 ring-slate-200">SIN SLA</span>
                 @endif
             </div>
         </div>
 
-        {{-- mensajes --}}
         @if ($exito)
             <div class="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 ring-1 ring-emerald-200">{{ $exito }}</div>
         @endif
@@ -45,137 +36,85 @@
             <div class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">{{ $errorAccion }}</div>
         @endif
 
-        {{-- acciones segun rol y estado --}}
         <div class="mt-4 flex flex-wrap gap-2">
             @if ($puedeResolver)
-                <button wire:click="$toggle('mostrarResolver')"
-                        class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                    ✅ Resolver ticket
-                </button>
+                <button wire:click="$toggle('mostrarResolver')" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">✅ Resolver ticket</button>
             @endif
-
             @if ($puedeCerrar)
-                <button wire:click="$toggle('mostrarCerrar')"
-                        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700">
-                    🔒 Cerrar ticket
-                </button>
-                <button wire:click="$toggle('mostrarReabrir')"
-                        class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700">
-                    🔄 Reabrir
-                </button>
+                <button wire:click="$toggle('mostrarCerrar')" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700">🔒 Cerrar ticket</button>
+                <button wire:click="$toggle('mostrarReabrir')" class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700">🔄 Reabrir</button>
             @endif
-
             @if ($puedeAsignar)
-                <button wire:click="$toggle('mostrarAsignar')"
-                        class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
+                <button wire:click="$toggle('mostrarAsignar')" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
                     👷 {{ $ticket->tecnicos->isEmpty() ? 'Asignar técnicos' : 'Reasignar' }}
                 </button>
             @endif
-
             @if ($ticket->drive_folder_url)
-                <a href="{{ $ticket->drive_folder_url }}" target="_blank" rel="noopener"
-                   class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-300 hover:bg-blue-50">
-                    📂 Carpeta en Drive
-                </a>
+                <a href="{{ $ticket->drive_folder_url }}" target="_blank" rel="noopener" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-300 hover:bg-blue-50">📂 Carpeta en Drive</a>
             @endif
-
         </div>
 
-        {{-- form RESOLVER --}}
+        {{-- formularios de accion --}}
         @if ($mostrarResolver)
             <div class="mt-3 rounded-lg bg-emerald-50 p-4 ring-1 ring-emerald-200">
-                <label class="block text-sm font-medium text-emerald-900">
-                    Comentario de resolución (opcional, se guarda en Drive)
-                </label>
-                <textarea wire:model="comentarioResolucion" rows="2"
-                          class="mt-1 w-full rounded-lg border border-emerald-300 px-3 py-2 text-sm"
-                          placeholder="Ej: Tarea realizada, equipo funcionando…"></textarea>
+                <label class="block text-sm font-medium text-emerald-900">Comentario de resolución (opcional, se guarda en Drive)</label>
+                <textarea wire:model="comentarioResolucion" rows="2" class="mt-1 w-full rounded-lg border border-emerald-300 px-3 py-2 text-sm"></textarea>
                 <div class="mt-2 flex gap-2">
-                    <button wire:click="resolver" wire:loading.attr="disabled"
-                            class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
-                        Confirmar resolución
-                    </button>
-                    <button wire:click="$toggle('mostrarResolver')"
-                            class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-emerald-100">Cancelar</button>
+                    <button wire:click="resolver" wire:loading.attr="disabled" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Confirmar resolución</button>
+                    <button wire:click="$toggle('mostrarResolver')" class="rounded-lg px-4 py-2 text-sm text-slate-600">Cancelar</button>
                 </div>
             </div>
         @endif
 
-        {{-- form CERRAR --}}
         @if ($mostrarCerrar)
             <div class="mt-3 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200">
-                <label class="block text-sm font-medium text-slate-700">Comentario de cierre (opcional)</label>
-                <textarea wire:model="comentarioCierre" rows="2"
-                          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Comentario de cierre (opcional)</label>
+                <textarea wire:model="comentarioCierre" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
                 <div class="mt-2 flex gap-2">
-                    <button wire:click="cerrar" wire:loading.attr="disabled"
-                            class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-                        Confirmar cierre
-                    </button>
-                    <button wire:click="$toggle('mostrarCerrar')"
-                            class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">Cancelar</button>
+                    <button wire:click="cerrar" wire:loading.attr="disabled" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Confirmar cierre</button>
+                    <button wire:click="$toggle('mostrarCerrar')" class="rounded-lg px-4 py-2 text-sm text-slate-600">Cancelar</button>
                 </div>
             </div>
         @endif
 
-        {{-- form REABRIR --}}
         @if ($mostrarReabrir)
             <div class="mt-3 rounded-lg bg-purple-50 p-4 ring-1 ring-purple-200">
                 <label class="flex items-center gap-2 text-sm font-medium text-purple-900">
-                    <input type="checkbox" wire:model="convertirACorrectivo" class="rounded border-purple-300">
-                    Cambiar de preventivo a correctivo al reabrir
+                    <input type="checkbox" wire:model="convertirACorrectivo" class="rounded border-purple-300"> Cambiar de preventivo a correctivo al reabrir
                 </label>
                 <label class="mt-2 block text-sm font-medium text-purple-900">Motivo de reapertura (opcional)</label>
-                <textarea wire:model="motivoReapertura" rows="2"
-                          class="mt-1 w-full rounded-lg border border-purple-300 px-3 py-2 text-sm"
-                          placeholder="Por qué se reabre el ticket…"></textarea>
+                <textarea wire:model="motivoReapertura" rows="2" class="mt-1 w-full rounded-lg border border-purple-300 px-3 py-2 text-sm"></textarea>
                 <div class="mt-2 flex gap-2">
-                    <button wire:click="reabrir" wire:loading.attr="disabled"
-                            class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
-                        Confirmar reapertura
-                    </button>
-                    <button wire:click="$toggle('mostrarReabrir')"
-                            class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-purple-100">Cancelar</button>
+                    <button wire:click="reabrir" wire:loading.attr="disabled" class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Confirmar reapertura</button>
+                    <button wire:click="$toggle('mostrarReabrir')" class="rounded-lg px-4 py-2 text-sm text-slate-600">Cancelar</button>
                 </div>
             </div>
         @endif
 
-        {{-- form ASIGNAR --}}
         @if ($mostrarAsignar)
             <div class="mt-3 rounded-lg bg-blue-50 p-4 ring-1 ring-blue-200">
-                <p class="text-sm font-medium text-blue-900">
-                    Elegí los técnicos (máx. {{ $ticket->limiteTecnicos() }} para {{ $ticket->area() }}):
-                </p>
+                <p class="text-sm font-medium text-blue-900">Elegí los técnicos (máx. {{ $ticket->limiteTecnicos() }} para {{ $ticket->area() }}):</p>
                 <div class="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
-                    @foreach ($tecnicosDisponibles as $tecnico)
+                    @forelse ($tecnicosDisponibles as $tecnico)
                         <label class="flex items-center gap-2 rounded-md bg-white px-2 py-1.5 text-sm ring-1 ring-blue-100">
-                            <input type="checkbox" wire:model.live="tecnicosSeleccionados"
-                                   value="{{ $tecnico->id }}" class="rounded border-blue-300">
-                            {{ $tecnico->name }}
-                            <span class="text-xs text-slate-400">({{ $tecnico->area ?? 'sin área' }})</span>
+                            <input type="checkbox" wire:model.live="tecnicosSeleccionados" value="{{ $tecnico->id }}" class="rounded border-blue-300">
+                            {{ $tecnico->name }} <span class="text-xs text-slate-400">({{ $tecnico->area ?? 'sin área' }})</span>
                         </label>
-                    @endforeach
+                    @empty
+                        <p class="text-sm text-slate-500">No hay técnicos disponibles para asignar.</p>
+                    @endforelse
                 </div>
                 <div class="mt-3 flex gap-2">
-                    <button wire:click="guardarAsignacion" wire:loading.attr="disabled"
-                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
-                        Guardar asignación
-                    </button>
-                    <button wire:click="$toggle('mostrarAsignar')"
-                            class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-blue-100">Cancelar</button>
+                    <button wire:click="guardarAsignacion" wire:loading.attr="disabled" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Guardar asignación</button>
+                    <button wire:click="$toggle('mostrarAsignar')" class="rounded-lg px-4 py-2 text-sm text-slate-600">Cancelar</button>
                 </div>
             </div>
         @endif
     </div>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-
-        {{-- ============================================================
-             COLUMNAS IZQUIERDA: DATOS DEL EXCEL
-        ============================================================ --}}
+        {{-- COLUMNA IZQUIERDA: DATOS DEL EXCEL --}}
         <div class="space-y-4 lg:col-span-2">
-
-            {{-- campos exactos del Excel --}}
             <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                 <h2 class="font-semibold text-slate-900">📄 Datos del Excel</h2>
                 <dl class="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
@@ -207,15 +146,12 @@
                     @foreach ($campos as $etiqueta => $valor)
                         <div class="flex gap-2 border-b border-slate-50 py-1">
                             <dt class="w-44 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $etiqueta }}</dt>
-                            <dd class="min-w-0 flex-1 break-words text-slate-700">
-                                {{ $valor ?? '—' }}
-                            </dd>
+                            <dd class="min-w-0 flex-1 break-words text-slate-700">{{ $valor ?? '—' }}</dd>
                         </div>
                     @endforeach
                 </dl>
             </div>
 
-            {{-- descripcion --}}
             @if ($ticket->descripcion)
                 <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                     <h2 class="font-semibold text-slate-900">📝 Descripción</h2>
@@ -223,29 +159,18 @@
                 </div>
             @endif
 
-            {{-- comentarios del Excel --}}
             @if ($ticket->comentarios || $ticket->comentarios_extra || $ticket->fotos_texto)
                 <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                     <h2 class="font-semibold text-slate-900">💬 Comentarios del Excel</h2>
-                    @if ($ticket->comentarios)
-                        <p class="mt-2 whitespace-pre-line text-sm text-slate-600">{{ $ticket->comentarios }}</p>
-                    @endif
-                    @if ($ticket->fotos_texto)
-                        <p class="mt-2 text-sm text-slate-500"><strong>Fotos:</strong> {{ $ticket->fotos_texto }}</p>
-                    @endif
-                    @if ($ticket->comentarios_extra)
-                        <p class="mt-2 text-sm text-slate-500"><strong>Comentarios:</strong> {{ $ticket->comentarios_extra }}</p>
-                    @endif
+                    @if ($ticket->comentarios) <p class="mt-2 whitespace-pre-line text-sm text-slate-600">{{ $ticket->comentarios }}</p> @endif
+                    @if ($ticket->fotos_texto) <p class="mt-2 text-sm text-slate-500"><strong>Fotos:</strong> {{ $ticket->fotos_texto }}</p> @endif
+                    @if ($ticket->comentarios_extra) <p class="mt-2 text-sm text-slate-500"><strong>Comentarios:</strong> {{ $ticket->comentarios_extra }}</p> @endif
                 </div>
             @endif
-
         </div>
 
-        {{-- ============================================================
-             COLUMNA DERECHA: TECNICOS, FOTOS, COMENTARIOS, HISTORIAL
-        ============================================================ --}}
+        {{-- COLUMNA DERECHA --}}
         <div class="space-y-4">
-
             {{-- tecnicos asignados --}}
             <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                 <h2 class="font-semibold text-slate-900">👷 Técnicos</h2>
@@ -255,41 +180,31 @@
                     <ul class="mt-2 space-y-1 text-sm">
                         @foreach ($ticket->tecnicos as $tecnico)
                             <li class="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1.5">
-                                <span>{{ $tecnico->name }}</span>
-                                <span class="text-xs text-slate-400">{{ $tecnico->area }}</span>
+                                <span>{{ $tecnico->name }}</span><span class="text-xs text-slate-400">{{ $tecnico->area }}</span>
                             </li>
                         @endforeach
                     </ul>
                 @endif
             </div>
 
-            {{-- subir fotos (solo tecnicos) --}}
+            {{-- fotos (solo tecnicos) --}}
             @if ($usuario->isTecnico())
                 <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                     <h2 class="font-semibold text-slate-900">📷 Fotos</h2>
-
                     @if ($ticket->fotos->isNotEmpty())
                         <div class="mt-2 grid grid-cols-3 gap-2">
                             @foreach ($ticket->fotos as $foto)
-                                <a href="{{ \Illuminate\Support\Facades\Storage::url($foto->ruta) }}" target="_blank"
-                                   class="group relative block aspect-square overflow-hidden rounded-lg ring-1 ring-slate-200">
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($foto->ruta) }}"
-                                         alt="Foto" class="h-full w-full object-cover">
+                                <a href="{{ \Illuminate\Support\Facades\Storage::url($foto->ruta) }}" target="_blank" class="group relative block aspect-square overflow-hidden rounded-lg ring-1 ring-slate-200">
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($foto->ruta) }}" alt="Foto" class="h-full w-full object-cover">
                                 </a>
                             @endforeach
                         </div>
                     @endif
-
                     <div class="mt-3 space-y-2">
                         <input type="file" wire:model="foto" accept="image/*"
                                class="block w-full text-xs text-slate-500 file:mr-2 file:rounded-lg file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
-                        @error('foto')
-                            <p class="text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-
-                        {{-- toma la foto con GPS y la sube --}}
-                        <button type="button"
-                                wire:loading.attr="disabled"
+                        @error('foto') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+                        <button type="button" wire:loading.attr="disabled"
                                 @click="
                                     if (! navigator.geolocation) { $wire.subirFoto(null, null); return; }
                                     navigator.geolocation.getCurrentPosition(
@@ -307,45 +222,32 @@
                 </div>
             @endif
 
-            {{-- insumos / consumibles (solo gestion) --}}
+            {{-- insumos (gestion) --}}
             @if ($usuario->puedeGestionar())
                 <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                     <h2 class="font-semibold text-slate-900">🧾 Insumos consumidos</h2>
-
                     @if ($consumibles->isNotEmpty())
                         <ul class="mt-2 space-y-1 text-sm">
                             @foreach ($consumibles as $consumible)
                                 <li class="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1.5">
-                                    <span>
-                                        {{ $consumible->articulo?->nombre_articulo ?? '—' }}
-                                        <span class="text-xs text-slate-400">x{{ $consumible->cantidad_utilizada }}</span>
-                                    </span>
-                                    <span class="text-xs font-semibold text-slate-600">
-                                        $ {{ number_format($consumible->gasto, 2, ',', '.') }}
-                                    </span>
+                                    <span>{{ $consumible->articulo?->nombre_articulo ?? '—' }} <span class="text-xs text-slate-400">x{{ $consumible->cantidad_utilizada }}</span></span>
+                                    <span class="text-xs font-semibold text-slate-600">$ {{ number_format($consumible->gasto, 2, ',', '.') }}</span>
                                 </li>
                             @endforeach
                         </ul>
                     @else
                         <p class="mt-2 text-sm text-slate-400">Sin insumos registrados.</p>
                     @endif
-
                     <div class="mt-3 space-y-2 border-t border-slate-100 pt-3">
                         <select wire:model="articuloId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
                             <option value="">— elegir insumo —</option>
                             @foreach ($articulos as $articulo)
-                                <option value="{{ $articulo->id }}">
-                                    {{ $articulo->nombre_articulo }} (stock: {{ $articulo->stock_actual }})
-                                </option>
+                                <option value="{{ $articulo->id }}">{{ $articulo->nombre_articulo }} (stock: {{ $articulo->stock_actual }})</option>
                             @endforeach
                         </select>
                         <div class="flex gap-2">
-                            <input type="number" wire:model="cantidad" min="1" value="1"
-                                   class="w-20 rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                            <button wire:click="registrarConsumible" wire:loading.attr="disabled"
-                                    class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">
-                                Registrar insumo
-                            </button>
+                            <input type="number" wire:model="cantidad" min="1" value="1" class="w-20 rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <button wire:click="registrarConsumible" wire:loading.attr="disabled" class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">Registrar insumo</button>
                         </div>
                         @error('articuloId') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
                         @error('cantidad') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
@@ -356,17 +258,10 @@
             {{-- comentarios del sistema --}}
             <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                 <h2 class="font-semibold text-slate-900">💬 Comentarios</h2>
-
                 <div class="mt-2 flex gap-2">
-                    <input type="text" wire:model="nuevoComentario" wire:keydown.enter="agregarComentario"
-                           placeholder="Escribí un comentario…"
-                           class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                    <button wire:click="agregarComentario"
-                            class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700">
-                        ➤
-                    </button>
+                    <input type="text" wire:model="nuevoComentario" wire:keydown.enter="agregarComentario" placeholder="Escribí un comentario…" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    <button wire:click="agregarComentario" class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700">➤</button>
                 </div>
-
                 <ul class="mt-3 space-y-2">
                     @forelse ($ticket->comentariosSistema as $comentario)
                         <li class="rounded-lg bg-slate-50 p-2.5 text-sm ring-1 ring-slate-100">
@@ -375,9 +270,6 @@
                                 <span>{{ $comentario->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                             <p class="mt-1 whitespace-pre-line text-slate-700">{{ $comentario->texto }}</p>
-                            @if ($comentario->tipo !== 'general')
-                                <span class="mt-1 inline-block rounded bg-slate-200 px-1.5 text-[10px] uppercase text-slate-500">{{ $comentario->tipo }}</span>
-                            @endif
                         </li>
                     @empty
                         <li class="text-sm text-slate-400">Sin comentarios.</li>
@@ -392,17 +284,8 @@
                     @forelse ($ticket->historial as $evento)
                         <li class="relative">
                             <span class="absolute -left-[1.4rem] top-1.5 h-2 w-2 rounded-full bg-slate-400"></span>
-                            <div class="text-slate-700">
-                                <strong class="capitalize">{{ $evento->accion }}</strong>
-                                @if ($evento->desde || $evento->hasta)
-                                    <span class="text-slate-400">
-                                        ({{ $evento->desde }} → {{ $evento->hasta }})
-                                    </span>
-                                @endif
-                            </div>
-                            <div class="text-xs text-slate-400">
-                                {{ $evento->user?->name }} · {{ $evento->created_at?->format('d/m/Y H:i') }}
-                            </div>
+                            <div class="text-slate-700"><strong class="capitalize">{{ $evento->accion }}</strong></div>
+                            <div class="text-xs text-slate-400">{{ $evento->user?->name }} · {{ $evento->created_at?->format('d/m/Y H:i') }}</div>
                         </li>
                     @empty
                         <li class="text-slate-400">Sin eventos.</li>
@@ -411,6 +294,4 @@
             </div>
         </div>
     </div>
-
-
 </div>
