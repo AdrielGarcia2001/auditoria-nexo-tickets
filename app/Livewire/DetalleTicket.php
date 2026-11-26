@@ -48,8 +48,6 @@ class DetalleTicket extends Component
     public string $edit_estado = '';
     public string $edit_estatus = '';
     public string $edit_comentarios = '';
-    public string $edit_comentarios_extra = '';
-    public string $edit_doc_adjunto = '';
     public string $edit_lo_resolvio = '';
 
     // ====== insumos / consumibles ======
@@ -89,8 +87,6 @@ class DetalleTicket extends Component
         $this->edit_estado = (string) ($t->estado ?? '');
         $this->edit_estatus = (string) ($t->estatus ?? '');
         $this->edit_comentarios = (string) ($t->comentarios ?? '');
-        $this->edit_comentarios_extra = (string) ($t->comentarios_extra ?? '');
-        $this->edit_doc_adjunto = (string) ($t->doc_adjunto ?? '');
         $this->edit_lo_resolvio = (string) ($t->lo_resolvio ?? '');
         $this->mostrarEditar = true;
         $this->errorAccion = null;
@@ -120,8 +116,6 @@ class DetalleTicket extends Component
             'estado' => $t->estado,
             'estatus' => $t->estatus,
             'comentarios' => $t->comentarios,
-            'comentarios_extra' => $t->comentarios_extra,
-            'doc_adjunto' => $t->doc_adjunto,
             'lo_resolvio' => $t->lo_resolvio,
         ];
 
@@ -134,8 +128,6 @@ class DetalleTicket extends Component
             'estado' => $this->edit_estado !== '' ? $this->edit_estado : null,
             'estatus' => $this->edit_estatus !== '' ? $this->edit_estatus : null,
             'comentarios' => $this->edit_comentarios !== '' ? $this->edit_comentarios : null,
-            'comentarios_extra' => $this->edit_comentarios_extra !== '' ? $this->edit_comentarios_extra : null,
-            'doc_adjunto' => $this->edit_doc_adjunto !== '' ? $this->edit_doc_adjunto : null,
             'lo_resolvio' => $this->edit_lo_resolvio !== '' ? $this->edit_lo_resolvio : null,
         ]);
 

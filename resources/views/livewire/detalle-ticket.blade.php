@@ -304,11 +304,13 @@
     {{-- MODAL: editar datos del ticket (admin y supervisor) --}}
     @if ($mostrarEditar)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-            <div class="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
-                <div class="mb-4 flex items-center justify-between">
+            <div class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
                     <h2 class="text-lg font-semibold text-slate-900">✏️ Editar datos del ticket</h2>
                     <button wire:click="$set('mostrarEditar', false)" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
+
+                <div class="overflow-y-auto px-6 py-4">
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="sm:col-span-2">
@@ -353,20 +355,13 @@
                         <input type="text" wire:model="edit_lo_resolvio" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Comentarios (resolución)</label>
-                        <textarea wire:model="edit_comentarios" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Comentarios extra</label>
-                        <textarea wire:model="edit_comentarios_extra" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Doc. adjunto</label>
-                        <input type="text" wire:model="edit_doc_adjunto" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Comentarios</label>
+                        <textarea wire:model="edit_comentarios" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
                     </div>
                 </div>
+                </div>{{-- /overflow-y-auto --}}
 
-                <div class="mt-5 flex justify-end gap-2">
+                <div class="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
                     <button wire:click="$set('mostrarEditar', false)" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">Cancelar</button>
                     <button wire:click="guardarEdicion" wire:loading.attr="disabled" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">💾 Guardar cambios</button>
                 </div>
