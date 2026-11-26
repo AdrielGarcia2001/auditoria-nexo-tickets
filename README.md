@@ -282,6 +282,111 @@ php artisan schedule:work
 
 ## Convenciones de commits y ramas
 
+## Evidencia de las actividades
+
+### 2. Repositorio y integración
+
+- Flujo utilizado: `main` recibe cambios integrados mediante Pull Requests desde las ramas técnicas.
+- Ramas técnicas:
+  - `database/esquemas-y-migraciones`
+  - `backend/logica-principal`
+  - `frontend/landing-e-interfaz`
+- Convención de commits:
+  - `feat(backend): ...`
+  - `fix(frontend): ...`
+  - `refactor(db): ...`
+  - `test(backend): ...`
+- Los Pull Requests deben contener una descripción de los cambios, pruebas ejecutadas y, cuando corresponda, capturas o migraciones.
+- Antes de integrar, actualizar la rama con `main` y resolver los conflictos en la rama de trabajo:
+
+```powershell
+git switch backend/logica-principal
+git pull origin backend/logica-principal
+git merge main
+# resolver conflictos, luego:
+git add .
+git commit -m "merge: integrar main en backend/logica-principal"
+git push
+```
+
+### 3. Patrón de diseño aplicado
+
+El flujo principal de tickets está aislado en `app/Services/Tickets/FlujoTicketService.php`. Este servicio concentra las transiciones permitidas:
+
+- `Nuevo -> Resuelto`: supervisor o administrador.
+- `Resuelto -> Cerrado`: administrador.
+- `Resuelto -> Nuevo`: reapertura administrativa.
+- Asignación de técnicos según el área del ticket.
+
+El patrón aplicado es **Service Layer**: controladores y componentes Livewire delegan las reglas de negocio al servicio, mientras los modelos representan datos y relaciones. Esto evita que cada interfaz duplique validaciones y mantiene una única fuente de verdad para el workflow.
+
+### 4. Buenas prácticas y gestión de dependencias
+
+- Composer fija las dependencias PHP en `composer.json` y `composer.lock`.
+- pnpm fija las dependencias frontend en `package.json` y `pnpm-lock.yaml`.
+- Las dependencias se instalan con los lockfiles para evitar cambios no reproducibles.
+- Laravel usa inyección de dependencias; por ejemplo, `FlujoTicketService` recibe `GoogleDriveService`.
+- Antes de cambiar dependencias: crear rama, actualizar una dependencia a la vez, ejecutar pruebas y comprobar el resultado del build.
+
+Ejemplo de refactorización:
+
+```powershell
+# antes de un cambio
+php vendor/bin/pint --test
+php vendor/bin/phpunit
+
+# durante el cambio
+php vendor/bin/pint
+
+# después del cambio
+php vendor/bin/phpunit
+pnpm run build
+```
+
+### 5. Optimización del ciclo CI/CD
+
+El workflow `.github/workflows/ci.yml` ejecuta:
+
+1. Preparación de PHP 8.4 y PostgreSQL/PostGIS.
+2. Instalación reproducible de Composer.
+3. Creación del entorno y migraciones.
+4. Ejecución de pruebas PHPUnit.
+5. Instalación reproducible de pnpm y build de Vite.
+
+### 6. Verificación y validación
+
+Pruebas existentes:
+
+- Prueba funcional de la landing: `tests/Feature/ExampleTest.php`.
+- Pruebas del workflow de tickets: `tests/Feature/WorkflowTest.php`.
+- Prueba base unitaria: `tests/Unit/ExampleTest.php`.
+
+Cobertura funcional principal:
+
+- Resolución de tickets por usuario autorizado.
+- Rechazo de una segunda resolución.
+- Cierre exclusivo por administrador.
+- Reapertura y conversión preventiva/correctiva.
+- Límite de técnicos por área.
+- Helpers de roles y permisos.
+
+Comandos de comprobación:
+
+```powershell
+php vendor/bin/phpunit
+php vendor/bin/pint --test
+pnpm install --frozen-lockfile
+pnpm run build
+```
+
+Para la suite PostgreSQL/PostGIS:
+
+```powershell
+php vendor/bin/phpunit --configuration phpunit.pgsql.xml
+```
+
+Los defectos deben registrarse en el Pull Request con pasos para reproducir, resultado esperado, resultado obtenido y evidencia. Las fallas de CI deben corregirse antes del merge.
+
 Ramas técnicas:
 
 | Rama | Contenido |
