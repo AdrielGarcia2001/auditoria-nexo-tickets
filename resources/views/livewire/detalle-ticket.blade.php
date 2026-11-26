@@ -130,7 +130,6 @@
                             'N° ORDEN' => $ticket->numero_orden,
                             'CLASE ORDEN' => $ticket->clase_orden,
                             'FECHA ENTRADA' => $ticket->fecha_entrada?->format('d/m/Y'),
-                            'FECHA MODIF. MAESTRO' => $ticket->fecha_modificacion_maestro?->format('d/m/Y'),
                             'GRUPO PLANIFICADOR' => $ticket->grupo_planificador,
                             'TEXTO BREVE' => $ticket->texto_breve,
                             'CALLE' => $ticket->calle,
@@ -145,7 +144,6 @@
                             'FECHA DE RESOLUCIÓN' => $ticket->fecha_resolucion?->format('d/m/Y'),
                             'AÑO' => $ticket->anio,
                             'ÁREA DE EMPRESA' => $ticket->area_empresa,
-                            'DOC. ADJ.' => $ticket->doc_adjunto,
                             'HOJA / FILA' => ($ticket->origen_hoja ? $ticket->origen_hoja.' · fila '.$ticket->fila_origen : null),
                         ];
                     @endphp
