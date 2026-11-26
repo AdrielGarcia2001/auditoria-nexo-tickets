@@ -49,6 +49,12 @@
                     👷 {{ $ticket->tecnicos->isEmpty() ? 'Asignar técnicos' : 'Reasignar' }}
                 </button>
             @endif
+
+            @if ($usuario->puedeGestionar())
+                <button wire:click="abrirEditar" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
+                    ✏️ Editar datos
+                </button>
+            @endif
             @if ($ticket->drive_folder_url)
                 <a href="{{ $ticket->drive_folder_url }}" target="_blank" rel="noopener" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-300 hover:bg-blue-50">📂 Carpeta en Drive</a>
             @endif
@@ -294,4 +300,77 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL: editar datos del ticket (admin y supervisor) --}}
+    @if ($mostrarEditar)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div class="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-slate-900">✏️ Editar datos del ticket</h2>
+                    <button wire:click="$set('mostrarEditar', false)" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Texto breve</label>
+                        <input type="text" wire:model="edit_texto_breve"
+                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200">
+                        @error('edit_texto_breve') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Descripción</label>
+                        <textarea wire:model="edit_descripcion" rows="3"
+                                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"></textarea>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Ubicación</label>
+                        <input type="text" wire:model="edit_ubicacion" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Calle</label>
+                        <input type="text" wire:model="edit_calle" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Prioridad</label>
+                        <select wire:model="edit_prioridad" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            @foreach (\App\Models\Ticket::PRIORIDAD_HORAS as $p => $h)
+                                <option value="{{ $p }}">{{ $p }}</option>
+                            @endforeach
+                            <option value="Programado Mensual">Programado Mensual</option>
+                        </select>
+                        @error('edit_prioridad') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Estado (Excel)</label>
+                        <input type="text" wire:model="edit_estado" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Estatus</label>
+                        <input type="text" wire:model="edit_estatus" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Lo resolvió</label>
+                        <input type="text" wire:model="edit_lo_resolvio" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Comentarios (resolución)</label>
+                        <textarea wire:model="edit_comentarios" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Comentarios extra</label>
+                        <textarea wire:model="edit_comentarios_extra" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Doc. adjunto</label>
+                        <input type="text" wire:model="edit_doc_adjunto" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="mt-5 flex justify-end gap-2">
+                    <button wire:click="$set('mostrarEditar', false)" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">Cancelar</button>
+                    <button wire:click="guardarEdicion" wire:loading.attr="disabled" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">💾 Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

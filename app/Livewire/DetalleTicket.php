@@ -38,6 +38,20 @@ class DetalleTicket extends Component
 
     public string $nuevoComentario = '';
 
+    // ====== edicion de datos del ticket (admin y supervisor) ======
+    public bool $mostrarEditar = false;
+    public string $edit_texto_breve = '';
+    public string $edit_descripcion = '';
+    public string $edit_ubicacion = '';
+    public string $edit_calle = '';
+    public string $edit_prioridad = '';
+    public string $edit_estado = '';
+    public string $edit_estatus = '';
+    public string $edit_comentarios = '';
+    public string $edit_comentarios_extra = '';
+    public string $edit_doc_adjunto = '';
+    public string $edit_lo_resolvio = '';
+
     // ====== insumos / consumibles ======
     public $articuloId = null;
     public int $cantidad = 1;
@@ -52,6 +66,90 @@ class DetalleTicket extends Component
     {
         $this->ticketId = $ticketId;
         $this->tecnicosSeleccionados = $this->ticket()->tecnicos()->pluck('users.id')->all();
+    }
+
+    // ======================================================================
+    //  EDICION DE DATOS (admin y supervisor)
+    // ======================================================================
+
+    /** Abre el modal de edicion con los valores actuales del ticket. */
+    public function abrirEditar(): void
+    {
+        if (! Auth::user()?->puedeGestionar()) {
+            $this->errorAccion = 'Solo supervisores y administradores pueden editar el ticket.';
+            return;
+        }
+
+        $t = $this->ticket();
+        $this->edit_texto_breve = (string) ($t->texto_breve ?? '');
+        $this->edit_descripcion = (string) ($t->descripcion ?? '');
+        $this->edit_ubicacion = (string) ($t->ubicacion ?? '');
+        $this->edit_calle = (string) ($t->calle ?? '');
+        $this->edit_prioridad = (string) ($t->prioridad ?? '');
+        $this->edit_estado = (string) ($t->estado ?? '');
+        $this->edit_estatus = (string) ($t->estatus ?? '');
+        $this->edit_comentarios = (string) ($t->comentarios ?? '');
+        $this->edit_comentarios_extra = (string) ($t->comentarios_extra ?? '');
+        $this->edit_doc_adjunto = (string) ($t->doc_adjunto ?? '');
+        $this->edit_lo_resolvio = (string) ($t->lo_resolvio ?? '');
+        $this->mostrarEditar = true;
+        $this->errorAccion = null;
+    }
+
+    /** Guarda los cambios y registra el historial. */
+    public function guardarEdicion(): void
+    {
+        if (! Auth::user()?->puedeGestionar()) {
+            $this->errorAccion = 'Solo supervisores y administradores pueden editar el ticket.';
+            return;
+        }
+
+        $this->validate([
+            'edit_texto_breve' => ['required', 'string', 'max:255'],
+            'edit_prioridad' => ['required', 'string'],
+        ]);
+
+        $t = $this->ticket();
+
+        $antes = [
+            'texto_breve' => $t->texto_breve,
+            'descripcion' => $t->descripcion,
+            'ubicacion' => $t->ubicacion,
+            'calle' => $t->calle,
+            'prioridad' => $t->prioridad,
+            'estado' => $t->estado,
+            'estatus' => $t->estatus,
+            'comentarios' => $t->comentarios,
+            'comentarios_extra' => $t->comentarios_extra,
+            'doc_adjunto' => $t->doc_adjunto,
+            'lo_resolvio' => $t->lo_resolvio,
+        ];
+
+        $t->fill([
+            'texto_breve' => $this->edit_texto_breve,
+            'descripcion' => $this->edit_descripcion !== '' ? $this->edit_descripcion : null,
+            'ubicacion' => $this->edit_ubicacion !== '' ? $this->edit_ubicacion : null,
+            'calle' => $this->edit_calle !== '' ? $this->edit_calle : null,
+            'prioridad' => $this->edit_prioridad,
+            'estado' => $this->edit_estado !== '' ? $this->edit_estado : null,
+            'estatus' => $this->edit_estatus !== '' ? $this->edit_estatus : null,
+            'comentarios' => $this->edit_comentarios !== '' ? $this->edit_comentarios : null,
+            'comentarios_extra' => $this->edit_comentarios_extra !== '' ? $this->edit_comentarios_extra : null,
+            'doc_adjunto' => $this->edit_doc_adjunto !== '' ? $this->edit_doc_adjunto : null,
+            'lo_resolvio' => $this->edit_lo_resolvio !== '' ? $this->edit_lo_resolvio : null,
+        ]);
+
+        $t->save(); // el evento saving recalcula el SLA
+
+        TicketHistorial::create([
+            'ticket_id' => $t->id,
+            'user_id' => Auth::id(),
+            'accion' => 'editado',
+            'detalles' => ['antes' => $antes, 'despues' => $t->only(array_keys($antes))],
+        ]);
+
+        $this->mostrarEditar = false;
+        $this->exito = '✏️ Datos del ticket actualizados.';
     }
 
     // ======================================================================
