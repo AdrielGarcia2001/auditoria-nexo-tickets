@@ -76,7 +76,8 @@ class TicketCrearController extends Controller
 
         DB::transaction(function () use ($datos, $usuario) {
             $tipo = $datos['clase_orden'] === 'FSMC' ? 'preventivo' : 'correctivo';
-            unset($datos['clase_orden']);
+            // Conservamos 'clase_orden': la columna es NOT NULL en la BD.
+            // El modelo no sobrescribe 'tipo' porque ya lo seteamos arriba.
 
             $estadoExcel = strtoupper(trim((string) ($datos['estado'] ?? '')));
             if ($estadoExcel === 'REALIZADO') {
