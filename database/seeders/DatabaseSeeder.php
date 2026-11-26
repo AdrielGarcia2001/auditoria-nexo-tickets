@@ -14,20 +14,39 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // emails que deben existir (el resto se elimina para no dejar usuarios viejos)
+        $emailsActuales = [
+            'admin@nexo.com',
+            'supervisor@nexo.com',
+            'hugogavilan@nexo.com',
+            'lucas.barreto@nexo.com',
+            'santiago.garcia@nexo.com',
+            'reginafrutos@nexo.com',
+        ];
+
+        // Primero limpiamos relaciones de usuarios que se van a eliminar
+        // (evita claves foráneas colgantes en tablas pivote)
+        $viejos = User::whereNotIn('email', $emailsActuales)->pluck('id');
+        \App\Models\SupervisorTecnico::whereIn('tecnico_id', $viejos)->delete();
+        \App\Models\SupervisorTecnico::whereIn('supervisor_id', $viejos)->delete();
+        \App\Models\TecnicoSitio::whereIn('tecnico_id', $viejos)->delete();
+        \App\Models\TicketAsignacion::whereIn('tecnico_id', $viejos)->delete();
+        User::whereIn('id', $viejos)->delete();
+
         // ====== usuarios ======
         $admin = User::updateOrCreate(
             ['email' => 'admin@nexo.com'],
-            ['name' => 'Adriel', 'password' => 'password', 'role' => User::ROLE_ADMIN, 'activo' => true, 'password_cambiado' => true]
+            ['name' => 'Admin', 'password' => 'password', 'role' => User::ROLE_ADMIN, 'activo' => true, 'password_cambiado' => true]
         );
 
         $supervisor = User::updateOrCreate(
             ['email' => 'supervisor@nexo.com'],
-            ['name' => 'Cecilia Roldan', 'password' => 'password', 'role' => User::ROLE_SUPERVISOR, 'activo' => true, 'password_cambiado' => true]
+            ['name' => 'Abel Nelson Garcia', 'password' => 'password', 'role' => User::ROLE_SUPERVISOR, 'activo' => true, 'password_cambiado' => true]
         );
 
         $mant1 = User::updateOrCreate(
-            ['email' => 'abel.garcia@nexo.com'],
-            ['name' => 'Abel Nelson Garcia', 'password' => 'password', 'role' => User::ROLE_TECNICO, 'area' => User::AREA_MANTENIMIENTO, 'activo' => true, 'password_cambiado' => true]
+            ['email' => 'hugogavilan@nexo.com'],
+            ['name' => 'Hugo Gavilan', 'password' => 'password', 'role' => User::ROLE_TECNICO, 'area' => User::AREA_MANTENIMIENTO, 'activo' => true, 'password_cambiado' => true]
         );
 
         $mant2 = User::updateOrCreate(
@@ -41,8 +60,8 @@ class DatabaseSeeder extends Seeder
         );
 
         $limp2 = User::updateOrCreate(
-            ['email' => 'maria.ruiz@nexo.com'],
-            ['name' => 'Maria Ruiz', 'password' => 'password', 'role' => User::ROLE_TECNICO, 'area' => User::AREA_LIMPIEZA, 'activo' => true, 'password_cambiado' => true]
+            ['email' => 'reginafrutos@nexo.com'],
+            ['name' => 'Regina Frutos', 'password' => 'password', 'role' => User::ROLE_TECNICO, 'area' => User::AREA_LIMPIEZA, 'activo' => true, 'password_cambiado' => true]
         );
 
         // ====== sitios de ejemplo ======
@@ -72,13 +91,19 @@ class DatabaseSeeder extends Seeder
 
         // ====== zonas delimitadas ======
         $zonaNorte = Zona::updateOrCreate(['codigo' => 'ZN'], [
-            'nombre' => 'Zona Norte', 'descripcion' => 'Cuadrillas de la zona norte de Formosa', 'activo' => true,
+            'nombre' => 'Zona Norte',
+            'descripcion' => 'Cuadrillas de la zona norte de Formosa',
+            'activo' => true,
         ]);
         $zonaCentro = Zona::updateOrCreate(['codigo' => 'ZC'], [
-            'nombre' => 'Zona Centro', 'descripcion' => 'Cuadrillas del centro de Formosa', 'activo' => true,
+            'nombre' => 'Zona Centro',
+            'descripcion' => 'Cuadrillas del centro de Formosa',
+            'activo' => true,
         ]);
         Zona::updateOrCreate(['codigo' => 'ZS'], [
-            'nombre' => 'Zona Sur', 'descripcion' => 'Cuadrillas de la zona sur de Formosa', 'activo' => true,
+            'nombre' => 'Zona Sur',
+            'descripcion' => 'Cuadrillas de la zona sur de Formosa',
+            'activo' => true,
         ]);
 
         $incone->update(['zona_id' => $zonaNorte->id]);
