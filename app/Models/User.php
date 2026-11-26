@@ -6,6 +6,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -135,11 +136,10 @@ class User extends Authenticatable
             ->all();
     }
 
-    /** Técnicos activos bajo este supervisor. */
-    public function tecnicos(): HasMany
+    /** Técnicos activos bajo este supervisor (relación muchos a muchos). */
+    public function tecnicos(): BelongsToMany
     {
-        return $this->hasMany(User::class)
-            ->whereIn('id', $this->tecnicoIds())
+        return $this->belongsToMany(User::class, 'supervisor_tecnicos', 'supervisor_id', 'tecnico_id')
             ->where('role', self::ROLE_TECNICO)
             ->where('activo', true)
             ->orderBy('name');

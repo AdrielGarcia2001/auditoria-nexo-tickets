@@ -22,7 +22,7 @@ class TicketCrearController extends Controller
 
         return view('tickets.crear', [
             'prioridades' => array_keys(Ticket::PRIORIDAD_HORAS),
-            'tecnicos' => $usuario->tecnicos(),
+            'tecnicos' => $usuario->tecnicos()->get(),
         ]);
     }
 

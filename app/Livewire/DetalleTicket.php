@@ -313,7 +313,7 @@ class DetalleTicket extends Component
         $usuario = Auth::user();
 
         if ($usuario->isSupervisor()) {
-            $tecnicosDisponibles = $usuario->tecnicos();
+            $tecnicosDisponibles = $usuario->tecnicos()->get();
         } elseif ($usuario->isAdmin()) {
             $tecnicosDisponibles = User::where('role', User::ROLE_TECNICO)
                 ->where('activo', true)
