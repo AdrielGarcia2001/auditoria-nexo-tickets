@@ -57,7 +57,7 @@ class ImportadorExcel extends Component
     protected function messages(): array
     {
         return [
-            'archivo.required' => 'Elegí un archivo .xlsx o el export de Google Sheets (.xlsx).',
+            'archivo.required' => 'Elegí un archivo .xlsx.',
             'archivo.mimes' => 'Solo se aceptan archivos .xlsx o .csv.',
             'archivo.max' => 'El archivo supera el máximo permitido (100 MB).',
         ];

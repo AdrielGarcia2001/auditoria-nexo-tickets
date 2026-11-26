@@ -6,7 +6,7 @@
     <div class="mb-5">
         <h1 class="text-2xl font-bold text-slate-900">Importar Excel</h1>
         <p class="text-sm text-slate-500">
-            Subí el archivo <code class="rounded bg-slate-100 px-1">.xlsx</code> de tickets (o el export de Google Sheets),
+            Subí el archivo <code class="rounded bg-slate-100 px-1">.xlsx</code> de tickets,
             revisá el preview completo y confirmá la importación.
         </p>
     </div>

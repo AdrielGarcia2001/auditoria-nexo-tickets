@@ -3,7 +3,7 @@
     <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <h2 class="font-semibold text-slate-900">1. Subí el Excel</h2>
         <p class="mt-1 text-sm text-slate-500">
-            Formato <code class="rounded bg-slate-100 px-1">.xlsx</code> (o el export de Google Sheets).
+            Formato <code class="rounded bg-slate-100 px-1">.xlsx</code>.
             El mismo archivo <strong>no se puede subir dos veces</strong>. Los tickets nuevos se insertan;
             si un ticket ya existe y el archivo trae <strong>cambios</strong>, se actualizan solo esos campos
             (el N° de orden se repite en distintos sitios, por eso se compara también con ubicación y fecha).
